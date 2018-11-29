@@ -18,30 +18,32 @@
 
 #pragma once
 
-// Select the BLAS vendor based on defines
 
-#ifdef USE_MKL
-#include <mkl.h>
-#else
-
-#ifdef USE_OPENBLAS
-#include <cblas.h>
-
-// Specific openblas routines.
+#ifdef __cplusplus
 extern "C" {
-int openblas_get_num_procs(void);
-void openblas_set_num_threads(int num_threads);
-char* openblas_get_corename(void);
-char* openblas_get_config(void);
+#endif
+  
+  typedef enum CBLAS_ORDER     {CblasRowMajor=101, CblasColMajor=102} CBLAS_ORDER;
+  typedef enum CBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113, CblasConjNoTrans=114} CBLAS_TRANSPOSE;
+  typedef enum CBLAS_UPLO      {CblasUpper=121, CblasLower=122} CBLAS_UPLO;
+  typedef enum CBLAS_DIAG      {CblasNonUnit=131, CblasUnit=132} CBLAS_DIAG;
+  typedef enum CBLAS_SIDE      {CblasLeft=141, CblasRight=142} CBLAS_SIDE;
+
+  
+  
+  void cblas_sgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const enum CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+                   const float alpha, const float *A, const int lda, const float *B, const int ldb, const float beta, float *C, const int ldc);
+  
+  void cblas_sgemv(const enum CBLAS_ORDER order,  const enum CBLAS_TRANSPOSE trans,  const int m, const int n,
+                   const float alpha, const float  *a, const int lda,  const float  *x,
+                   const int incx,  const float beta,  float  *y, const int incy);
+  
+  float cblas_sdot(const int n, const float  *x, const int incx, const float  *y, const int incy);
+
+#ifdef __cplusplus
 }
-
-#else
-
-#ifdef __APPLE__
-#include <Accelerate/Accelerate.h>
-#define USE_ACCELERATE
 #endif
 
-#endif  // USE_OPENBLAS
 
-#endif  // USE_MKL
+
+  
