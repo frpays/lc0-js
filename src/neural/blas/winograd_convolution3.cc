@@ -212,7 +212,7 @@ void WinogradConvolution3::TransformIn(const size_t batch_size,
 void WinogradConvolution3::Sgemm(const size_t batch_size, const float* weights,
                                  const size_t input_channels,
                                  const size_t output_channels) {
-#ifdef USE_MKL
+#if 0
 
   /*
    void cblas_sgemm_batch (const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE*
@@ -267,7 +267,13 @@ void WinogradConvolution3::Sgemm(const size_t batch_size, const float* weights,
 
     auto offset_v = b * batch_size * input_channels * kTiles;
     auto offset_m = b * batch_size * output_channels * kTiles;
+    auto batch_tiles =batch_size * kTiles;
+    auto batch_weights=&weights[offset_u];
+    auto batch_inputs=&V_[offset_v];
+    auto batch_outputs=&M_[offset_m];
 
+
+  /*
     cblas_sgemm(CblasColMajor,               // Row major format
                 CblasNoTrans,                // A no trans
                 CblasNoTrans,                // B no trans
@@ -281,6 +287,19 @@ void WinogradConvolution3::Sgemm(const size_t batch_size, const float* weights,
                 (int)input_channels, 0.0f,   // ldV
                 &M_[offset_m],               // M
                 (int)output_channels);       // ldM
+  */
+    
+    for (size_t k=0; k<batch_tiles; k++) {
+      for (size_t i=0; i<output_channels; i++) {
+        float acc=0;
+        for (size_t j=0; j<input_channels; j++) {
+          acc+=batch_weights[i+output_channels*j]*batch_inputs[j+input_channels*k];
+        }
+        batch_outputs[i+output_channels*k]=acc;
+      }
+    } 
+    
+    
   }
 
 #endif

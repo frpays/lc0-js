@@ -115,133 +115,15 @@ endif
 ## BACKENDS
 #############################################################################
 
-if get_option('build_backends')
+blas_files = [
+  'src/neural/blas/convolution1.cc',
+  'src/neural/blas/network_blas.cc',
+  'src/neural/blas/batchnorm.cc',
+  'src/neural/blas/fully_connected_layer.cc',
+  'src/neural/blas/winograd_convolution3.cc'
+]
 
-  ## ~~~~~
-  ## Blas
-  ## ~~~~~
-
-  has_blas = false
-
-  accelerate_lib = dependency('Accelerate', required: false)
-
-  mkl_libdirs = get_option('mkl_libdirs')
-  mkl_lib = cc.find_library('mkl_rt', dirs: mkl_libdirs, required: false)
-
-  openblas_libdirs = get_option('openblas_libdirs')
-  openblas_lib = cc.find_library('openblas.dll', dirs: openblas_libdirs, required: false)
-  if not openblas_lib.found()
-    openblas_lib = cc.find_library('openblas', dirs: openblas_libdirs, required: false)
-  endif
-
-  if get_option('blas') or get_option('opencl')
-    if get_option('mkl') and mkl_lib.found()
-      add_project_arguments('-DUSE_MKL', language : 'cpp')
-      includes += include_directories(get_option('mkl_include'))
-      deps += [ mkl_lib ]
-      has_blas = true
-
-    elif get_option('accelerate') and accelerate_lib.found()
-      includes += include_directories('/System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.framework/Headers')
-      deps += [ accelerate_lib ]
-      has_blas = true
-
-    elif get_option('openblas') and openblas_lib.found()
-      add_project_arguments('-DUSE_OPENBLAS', language : 'cpp')
-
-      required_openblas_header = 'openblas_config.h'
-      if not cc.has_header(required_openblas_header)
-        openblas_headers_found = false
-
-        # add the first valid include directory
-        foreach d : get_option('openblas_include')
-          if not openblas_headers_found and cc.has_header(required_openblas_header, args: '-I' + d)
-            includes += include_directories(d)
-            openblas_headers_found = true
-          endif
-        endforeach
-
-        if not openblas_headers_found
-          error('Failed to detect OpenBLAS headers. Did you install libopenblas-dev?')
-        endif
-      endif
-
-      deps += [ openblas_lib ]
-      has_blas = true
-    endif
-
-    if has_blas
-      blas_files = [
-      'src/neural/blas/batchnorm.cc',
-      'src/neural/blas/fully_connected_layer.cc',
-      'src/neural/blas/winograd_convolution3.cc'
-      ]
-    endif
-
-    ispc = find_program('ispc', required: false)
-    ispc_extra_args = []
-    if has_blas and get_option('ispc') and ispc.found()
-      ispc_native_only = get_option('ispc_native_only')
-      if host_machine.system() == 'windows'
-        outputnames = [ '@BASENAME@.obj']
-        if not ispc_native_only
-          outputnames += ['@BASENAME@_sse2.obj', '@BASENAME@_sse4.obj',
-                          '@BASENAME@_avx.obj', '@BASENAME@_avx11.obj',
-                          '@BASENAME@_avx2.obj' ]
-        endif
-      else
-        ispc_extra_args += ['--pic']
-        outputnames = [ '@BASENAME@.o']
-        if not ispc_native_only
-          outputnames += ['@BASENAME@_sse2.o', '@BASENAME@_sse4.o', 
-                           '@BASENAME@_avx.o', '@BASENAME@_avx11.o',
-                           '@BASENAME@_avx2.o' ]
-        endif
-      endif
-      if ispc_native_only
-        ispc_target = 'host'
-      else
-        ispc_target = 'sse2-i32x8,sse4-i32x8,avx1-i32x8,avx1.1-i32x8,avx2-i32x8'
-      endif
-      iscp_gen = generator(ispc,
-        output: [ '@BASENAME@_ispc.h', outputnames ],
-        arguments: [ '-O2', '--arch=x86-64',
-                     '--target=' + ispc_target,
-                     '@INPUT@', '-o', '@OUTPUT1@' ,'-h', '@OUTPUT0@' ]
-                     + ispc_extra_args
-      )
-    endif
-
-  endif
-
-  if get_option('blas') and has_blas
-
-    blas_files += [
-    'src/neural/blas/convolution1.cc',
-    'src/neural/blas/network_blas.cc'
-    ]
-
-    files += blas_files
-    has_backends = true
-
-    if get_option('ispc') and ispc.found()
-      files += iscp_gen.process('src/neural/blas/winograd_transform.ispc')
-      add_project_arguments('-DUSE_ISPC', language : 'cpp')
-    endif
-
-  endif
-
-
-
-endif # if get_option('build_backends')
-
-if not has_backends and get_option('build_backends')
-  error('''
-
-        No usable computation backends (cudnn/tensorflow/etc) are found.
-        If you want to build it with random only backend, pass
-        -D build_backends=false to a meson build.''')
-endif
+files += blas_files
 
 
 #############################################################################

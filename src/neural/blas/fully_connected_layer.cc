@@ -30,6 +30,8 @@ void FullyConnectedLayer::Forward1D(size_t batch_size, const size_t input_size,
                                     const float* inputs, const float* weights,
                                     const float* biases, bool apply_relu,
                                     float* outputs) {
+  
+  /*
   if (batch_size == 1) {
     // Just a matrix-vector multiplication
     //
@@ -80,6 +82,19 @@ void FullyConnectedLayer::Forward1D(size_t batch_size, const size_t input_size,
                 outputs,            // C
                 (int)output_size);  // ldc, leading rank of C
   }
+  
+  */
+  
+  for (size_t k=0; k<batch_size; k++) {
+    for (size_t i=0; i<output_size; i++) {
+      float acc=0;
+      for (size_t j=0; j<input_size; j++) {
+        acc+=weights[i*input_size+j]*inputs[j+input_size*k];
+      }
+      outputs[i+output_size*k]=acc;
+    }
+  }
+  
   if (apply_relu) {
     for (size_t i = 0; i < batch_size; i++) {
       float* batch_outputs = outputs + i * output_size;
@@ -104,7 +119,11 @@ float FullyConnectedLayer::Forward0D(const size_t size, const float* x,
   // float cblas_sdot(const int N, const float *X, const int incX, const float
   // *Y,
   // const int incY);
-  return cblas_sdot((int)size, x, 1, y, 1);
+ // return cblas_sdot((int)size, x, 1, y, 1);
+  float acc=0;
+  for (size_t i=0; i<size; i++)
+    acc+=x[i]*y[i];
+  return acc;
 }
 
 void FullyConnectedLayer::Softmax(const size_t size, const float* input,
