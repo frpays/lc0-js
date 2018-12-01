@@ -68,6 +68,8 @@ class Search {
 
   // Starts worker threads and returns immediately.
   void StartThreads(size_t how_many);
+  
+  void RunInfiniteLoop();
 
   // Starts search with k threads and wait until it finishes.
   void RunBlocking(size_t threads);
@@ -203,6 +205,11 @@ class SearchWorker {
     do {
       ExecuteOneIteration();
     } while (search_->IsSearchActive());
+  }
+  
+  void RunInfiniteLoop() {
+    for (int i=0; i<10; i++)
+  ExecuteOneIteration();
   }
 
   // Does one full iteration of MCTS search:

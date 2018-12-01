@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>LC0 v19 compiled to javascript</title>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<link rel="stylesheet" type="text/css" href="engine.css"/>
+	<link rel="stylesheet" type="text/css" href="chessboard-0.3.0.css"/>
+	<link rel="stylesheet" type="text/css" href="emscripten.css"/>
+</head>
+
+<body>
+
+<div>
+<div id="title">LC0 v19 compiled to javascript</div>
+<p></a>Emcripten</p>
+</div>
+
+<div id="boardset">
+  <div id="lastmove"></div>
+  <div id="board"></div>
+  <div id="buttons">
+  <input type="button" id="flipBtn" value="Flip" />
+  </div>
+</div>
+
+<div id="analysis"> </div>
+<div id="error"></div>
+
+<div id="encripten">
+    <div class="spinner" id='spinner'></div>
+    <div class="emscripten" id="status">Downloading...</div>
+    <div class="emscripten">
+      <progress value="0" max="100" id="progress" hidden=1></progress>
+    </div>
+    <div class="emscripten_border">
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    </div>
+    <textarea id="output" rows="8"></textarea>
+</div>
+
+
+<div id="credits">
+<p>
+&copy; <a href="https://github.com/frpays">2018 Fran&ccedil;ois Pays</a></br>
+</p>
+<p>
+LC0 engine by <a href="http://lczero.org/">LC0 authors</a>
+</p>
+<p>
+Chess javascript board by <a href="http://chessboardjs.com/">chessboard.js</a>
+</p>
+</div>
+
+</body>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="chessboard-0.3.0.js"></script>
+	<script src="engine.js"></script>
+    <script async type="text/javascript" src="lc0.js"></script>
+
+</html>
+

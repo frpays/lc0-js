@@ -1,0 +1,93 @@
+
+
+body {
+	background-color: #f0f0f0;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+#title {
+	font-size: 120%;
+	font-weight: bold;
+}
+
+#gameinfo {
+	float: left;
+	font-size: 70%;
+}
+
+#credits {
+	float: left;
+	font-size: 70%;
+}
+
+#board {
+	width: 400px;
+	float: left;
+}
+
+
+#variations {
+	padding: 10px;
+/*	background-color: #ff70ff;*/
+	min-width: 200px;
+	overflow: hidden;
+	font-size: 80%;
+}
+
+.move {
+	width: 40px;
+}
+
+.eval {
+	width: 40px;
+}
+
+
+#lastmove {
+	padding: 5px;
+}
+
+
+#eval {
+	font-size: 120%;
+	padding: 10px;
+}
+
+
+#evalinfo {
+	font-size: 100%;
+	padding: 10px;
+}
+
+
+#buttons {
+	width: 100%;
+	float: left;
+	margin: 5px;
+}
+
+#error {
+	background-color: #D00000;
+	color: white;
+	width: 100%;
+	padding: 12px 20px;
+	margin: 8px 0;
+	display: none;
+	border-radius: 5px;
+	box-sizing: border-box;
+}
+
+.highlight {
+  -webkit-box-shadow: inset 0 0 3px 3px yellow;
+  -moz-box-shadow: inset 0 0 3px 3px yellow;
+  box-shadow: inset 0 0 3px 3px yellow;  
+}
+
+
+/*
+.highlight {
+  -webkit-box-shadow: inset 0 0 3px 3px blue;
+  -moz-box-shadow: inset 0 0 3px 3px blue;
+  box-shadow: inset 0 0 3px 3px blue;  
+}
+*/

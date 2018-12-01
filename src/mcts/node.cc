@@ -99,7 +99,7 @@ class NodeGarbageCollector {
   std::thread gc_thread_;
 };  // namespace
 
-NodeGarbageCollector gNodeGc;
+//NodeGarbageCollector gNodeGc;
 }  // namespace
 
 /////////////////////////////////////////////////////////////////////////
@@ -250,7 +250,7 @@ void Node::FinalizeScoreUpdate(float v, int multivisit) {
 
 Node::NodeRange Node::ChildNodes() const { return child_.get(); }
 
-void Node::ReleaseChildren() { gNodeGc.AddToGcQueue(std::move(child_)); }
+void Node::ReleaseChildren() {} 
 
 void Node::ReleaseChildrenExceptOne(Node* node_to_save) {
   // Stores node which will have to survive (or nullptr if it's not found).
@@ -261,14 +261,14 @@ void Node::ReleaseChildrenExceptOne(Node* node_to_save) {
     // If current node is the one that we have to save.
     if (node->get() == node_to_save) {
       // Kill all remaining siblings.
-      gNodeGc.AddToGcQueue(std::move((*node)->sibling_));
+      //gNodeGc.AddToGcQueue(std::move((*node)->sibling_));
       // Save the node, and take the ownership from the unique_ptr.
       saved_node = std::move(*node);
       break;
     }
   }
   // Make saved node the only child. (kills previous siblings).
-  gNodeGc.AddToGcQueue(std::move(child_));
+  //gNodeGc.AddToGcQueue(std::move(child_));
   child_ = std::move(saved_node);
 }
 
@@ -282,6 +282,7 @@ uint64_t ReverseBitsInBytes(uint64_t v) {
 }
 }  // namespace
 
+  /*
 V3TrainingData Node::GetV3TrainingData(
     GameResult game_result, const PositionHistory& history,
     FillEmptyHistory fill_empty_history) const {
@@ -330,6 +331,7 @@ V3TrainingData Node::GetV3TrainingData(
 
   return result;
 }
+   */
 
 /////////////////////////////////////////////////////////////////////////
 // EdgeAndNode
@@ -364,7 +366,7 @@ void NodeTree::MakeMove(Move move) {
 void NodeTree::TrimTreeAtHead() {
   auto tmp = std::move(current_head_->sibling_);
   // Send dependent nodes for GC instead of destroying them immediately.
-  gNodeGc.AddToGcQueue(std::move(current_head_->child_));
+  //gNodeGc.AddToGcQueue(std::move(current_head_->child_));
   *current_head_ = Node(current_head_->GetParent(), current_head_->index_);
   current_head_->sibling_ = std::move(tmp);
 }
@@ -410,7 +412,7 @@ bool NodeTree::ResetToPosition(const std::string& starting_fen,
 void NodeTree::DeallocateTree() {
   // Same as gamebegin_node_.reset(), but actual deallocation will happen in
   // GC thread.
-  gNodeGc.AddToGcQueue(std::move(gamebegin_node_));
+  //gNodeGc.AddToGcQueue(std::move(gamebegin_node_));
   gamebegin_node_ = nullptr;
   current_head_ = nullptr;
 }
