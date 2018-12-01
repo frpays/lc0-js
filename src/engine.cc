@@ -398,7 +398,12 @@ void EngineController::Go(const GoParams& params) {
     LOGFILE << "Timer started at "
             << FormatTime(SteadyClockToSystemClock(move_start_time_));
   }
-  search_->StartThreads(options_.Get<int>(kThreadsOptionId.GetId()));
+  
+  //for (int i=0; i<100; i++)
+  
+  search_->RunInfiniteLoop();
+
+  //search_->StartThreads(options_.Get<int>(kThreadsOptionId.GetId()));
 }
 
 void EngineController::PonderHit() {

@@ -50,6 +50,10 @@ int main(int argc, const char** argv) {
     CommandLine::ConsumeCommand("uci");
     // Ordinary UCI engine.
     EngineLoop loop;
-    loop.RunLoop();
+    GoParams goParams;
+    goParams.infinite=true;
+    loop.CmdGo(goParams);
+    //loop.RunLoop();
   }
+
 }
