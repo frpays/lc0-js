@@ -14,6 +14,7 @@ var Controller = function() {
         $('#goBtn').on('click', this.go.bind(this));
         $('#stopBtn').on('click', this.stop.bind(this));
 		this.looping=false;
+		this.updateButtons();
 	}
 
 	Controller.prototype={
@@ -27,6 +28,7 @@ var Controller = function() {
 				return;
 			if (!this.engine.CanStep()) {
 				this.looping=false;
+				this.updateButtons();
 				return;
 			}
 			this.engine.Step();
@@ -38,6 +40,7 @@ var Controller = function() {
 			if (this.looping)
 				return;
 			this.looping=true;
+			this.updateButtons();
 			this.engine.Go();
 			setTimeout(this.loop.bind(this), 0);
 		},
@@ -46,7 +49,10 @@ var Controller = function() {
 			if (!this.looping)
 				return;
 			this.engine.Stop();
-		}
+			this.looping=false;
+		},
+
+		updateButtons() { }
 
 	};
 
