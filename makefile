@@ -25,6 +25,7 @@ EMMC_MEMORY_FLAGS=\
 EMCC=emcc \
 -std=gnu++14 \
 -stdlib=libc++ \
+--bind \
 $(EMMC_OPTIM_FLAGS) \
 $(EMMC_DEBUG_FLAGS) \
 $(EMMC_THREADS_FLAGS) \

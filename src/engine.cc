@@ -398,12 +398,10 @@ void EngineController::Go(const GoParams& params) {
     LOGFILE << "Timer started at "
             << FormatTime(SteadyClockToSystemClock(move_start_time_));
   }
-  
-  //for (int i=0; i<100; i++)
-  
-  search_->RunInfiniteLoop();
 
-  //search_->StartThreads(options_.Get<int>(kThreadsOptionId.GetId()));
+#ifndef EMSCRIPTEN
+  search_->StartThreads(options_.Get<int>(kThreadsOptionId.GetId()));
+#endif
 }
 
 void EngineController::PonderHit() {
@@ -466,5 +464,31 @@ void EngineLoop::CmdGo(const GoParams& params) { engine_.Go(params); }
 void EngineLoop::CmdPonderHit() { engine_.PonderHit(); }
 
 void EngineLoop::CmdStop() { engine_.Stop(); }
+  
+  
+  // Emscripten bindings.
+  
+  bool
+  EngineController::CanStep() {
+    if (search_) return search_->IsSearchActive();
+    return false;
+  }
+  
+  void
+  EngineController::Step() {
+    if (search_) search_->RunOneIteration();
+  }
+  
+  
+  bool
+  EngineLoop::CanStep() {
+    return engine_.CanStep();
+  }
+  
+  void
+  EngineLoop::Step() {
+    engine_.Step();
+  }
+
 
 }  // namespace lczero
