@@ -94,7 +94,9 @@ void PopulateConvBlockWeights(FloatVectors* vecs, Weights::ConvBlock* block) {
 }
 }  // namespace
 
-Weights LoadWeightsFromFile(const std::string& filename) {
+Weights LoadWeights() {
+  
+  const std::string& filename =kFileName;
   FloatVectors vecs = LoadFloatsFromFile(filename);
 
   if (vecs.size() <= 19)
@@ -127,10 +129,6 @@ Weights LoadWeightsFromFile(const std::string& filename) {
 
   PopulateConvBlockWeights(&vecs, &result.input);
   return result;
-}
-
-std::string DiscoverWeightsFile() {
-  return kFileName;
 }
 
 }  // namespace lczero
