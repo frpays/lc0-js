@@ -43,15 +43,9 @@ public:
   
   Engine() {
     
-    Logging::Get().SetFilename("<stderr>");
-    
-    std::cout << "COUT" << std::endl;
-    std::cout << "CERR" << std::endl;
-
-    LOGFILE << "Lc0 started.";
-    CERR << "       _";
-    CERR << "|   _ | |";
-    CERR << "|_ |_ |_| v" << GetVersionStr() << " built " << __DATE__;
+    std::cout << "       _" << std::endl;
+    std::cout << "|   _ | |" << std::endl;
+    std::cout << "|_ |_ |_| v" << GetVersionStr() << " for js, built " << __DATE__ << std::endl;
     
   }
 
@@ -71,6 +65,10 @@ public:
     loop_.Step();
   }
   
+  void Stop() {
+    loop_.CmdStop();
+  }
+  
   
 private:
   
@@ -88,6 +86,7 @@ EMSCRIPTEN_BINDINGS(bindings) {
   .function("Go", &Engine::Go)
   .function("CanStep", &Engine::CanStep)
   .function("Step", &Engine::Step)
+  .function("Stop", &Engine::Stop)
   ;
 }
   
