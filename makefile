@@ -10,10 +10,10 @@ dist_clean:: clean
 
 
 EMMC_OPTIM_FLAGS=\
--O
+-O2
 
 EMMC_DEBUG_FLAGS=\
--g
+#-g
 
 EMMC_THREADS_FLAGS=
 #-D HAVE_PTHREAD
@@ -95,13 +95,16 @@ clean::
 TARGETS=\
 www/lc0.js \
 www/lc0.data \
-www/lc0.wast \
 www/lc0.wasm
+
+ADDITIONAL_OBJECTS=\
+www/lc0.wast \
+www/lc0.html
 
 all:: $(TARGETS)
 
 dist_clean::
-	rm -f $(TARGETS)
+	rm -f $(TARGETS) $(ADDITIONAL_OBJECTS)
 
 $(TARGETS): $(OBJECTS) weights.txt
 	$(EMCC)  --preload-file weights.txt -o www/lc0.js $(OBJECTS) $(PROTOBUF_OBJECTS)

@@ -82,7 +82,6 @@ files += [
   'src/neural/loader.cc',
   'src/neural/network_check.cc',
   'src/neural/network_random.cc',
-  'src/neural/writer.cc',
   'src/syzygy/syzygy.cc',
   'src/utils/commandline.cc',
   'src/utils/configfile.cc',
