@@ -77,6 +77,10 @@ class EngineController {
   void PonderHit();
   // Must not block.
   void Stop();
+  
+  // Emscripten bindings
+  bool CanStep();
+  void Step();
 
   SearchLimits PopulateSearchLimits(int ply, bool is_black,
       const GoParams& params,
@@ -122,6 +126,10 @@ class EngineController {
 class EngineLoop : public UciLoop {
  public:
   EngineLoop();
+  
+  // Emscripten bindings
+  bool CanStep();
+  void Step();
 
   void RunLoop() override;
   void CmdUci() override;

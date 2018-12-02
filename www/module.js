@@ -68,6 +68,12 @@ var Module = {
   monitorRunDependencies: function(left) {
     this.totalDependencies = Math.max(this.totalDependencies, left);
     Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+  },
+  onRuntimeInitialized: function() {
+
+//  foo();
+	this.controller=new Controller();
+	this.controller.run();
   }
 };
 Module.setStatus('Downloading...');
@@ -79,3 +85,27 @@ window.onerror = function(event) {
     if (text) Module.printErr('[post-exception status] ' + text);
   };
 };
+
+
+var engine=undefined;
+
+function foo() {
+
+	engine=new Module.Engine();
+	engine.Go();
+
+	setTimeout(bar, 0);
+}
+
+function bar() {
+	if (!engine.CanStep())
+		return;
+
+	engine.Step();
+	setTimeout(bar, 0);
+}
+
+
+
+
+

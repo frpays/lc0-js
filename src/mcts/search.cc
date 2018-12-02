@@ -573,13 +573,10 @@ void Search::StartThreads(size_t how_many) {
   }
 }
     
-    void Search::RunInfiniteLoop() {
-
-      SearchWorker worker(this, params_);
-      worker.RunInfiniteLoop();
-
-    }
-    
+void Search::RunOneIteration() {
+  SearchWorker worker(this, params_);
+  worker.ExecuteOneIteration();
+}
 
 void Search::RunBlocking(size_t threads) {
   StartThreads(threads);
