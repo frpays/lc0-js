@@ -1,8 +1,3 @@
-var cfg = {
-  showNotation: true,
-  position: 'start'
-};
-var board = ChessBoard('board', cfg);
 
 var statusElement = document.getElementById('status');
 var progressElement = document.getElementById('progress');
@@ -32,6 +27,8 @@ var Module = {
     if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
     console.error(text);
   },
+
+  /*
   canvas: (function() {
     var canvas = document.getElementById('canvas');
 
@@ -42,6 +39,8 @@ var Module = {
 
     return canvas;
   })(),
+  */
+
   setStatus: function(text) {
     if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
     if (text === Module.setStatus.last.text) return;
@@ -70,10 +69,7 @@ var Module = {
     Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
   },
   onRuntimeInitialized: function() {
-
-//  foo();
-	this.controller=new Controller();
-	this.controller.run();
+	this.controller.initialize();
   }
 };
 Module.setStatus('Downloading...');
@@ -86,26 +82,6 @@ window.onerror = function(event) {
   };
 };
 
-
-var engine=undefined;
-
-function foo() {
-
-	engine=new Module.Engine();
-	engine.Go();
-
-	setTimeout(bar, 0);
-}
-
-function bar() {
-	if (!engine.CanStep())
-		return;
-
-	engine.Step();
-	setTimeout(bar, 0);
-}
-
-
-
+Module.controller=new Controller();
 
 
