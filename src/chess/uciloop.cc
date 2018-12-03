@@ -128,18 +128,23 @@ void UciLoop::RunLoop() {
   std::cout.setf(std::ios::unitbuf);
   std::string line;
   while (std::getline(std::cin, line)) {
-    LOGFILE << ">> " << line;
-    try {
-      auto command = ParseCommand(line);
-      // Ignore empty line.
-      if (command.first.empty()) continue;
-      if (!DispatchCommand(command.first, command.second)) break;
-    } catch (Exception& ex) {
-      SendResponse(std::string("error ") + ex.what());
-    }
+    if (!Consume(line)) break;
   }
 }
-
+  
+bool UciLoop::Consume(const std::string& line) {
+  LOGFILE << ">> " << line;
+  try {
+    auto command = ParseCommand(line);
+    // Ignore empty line.
+    if (command.first.empty()) return true;
+    return DispatchCommand(command.first, command.second);
+  } catch (Exception& ex) {
+    SendResponse(std::string("error ") + ex.what());
+  }
+  return false;
+}
+  
 bool UciLoop::DispatchCommand(
     const std::string& command,
     const std::unordered_map<std::string, std::string>& params) {

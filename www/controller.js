@@ -41,14 +41,14 @@ var Controller = function() {
 				return;
 			this.looping=true;
 			this.updateButtons();
-			this.engine.Go();
+			this.engine.Send("go infinite");
 			setTimeout(this.loop.bind(this), 0);
 		},
 
 		stop() {
 			if (!this.looping)
 				return;
-			this.engine.Stop();
+			this.engine.Send("stop");
 			this.looping=false;
 		},
 

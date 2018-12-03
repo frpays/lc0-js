@@ -54,6 +54,8 @@ class UciLoop {
  public:
   virtual ~UciLoop() {}
   virtual void RunLoop();
+  
+  bool Consume(const std::string& line);
 
   // Sends response to host.
   void SendResponse(const std::string& response);
