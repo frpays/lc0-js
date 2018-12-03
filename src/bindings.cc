@@ -50,12 +50,11 @@ public:
   }
 
 
-  void Go() {
-  	GoParams goParams;
+  void Send(std::string text) {
+    GoParams goParams;
     goParams.infinite=true;
-    loop_.CmdGo(goParams);
+    loop_.Consume(text);
   }
-  
   
   bool CanStep() {
     return loop_.CanStep();
@@ -65,15 +64,9 @@ public:
     loop_.Step();
   }
   
-  void Stop() {
-    loop_.CmdStop();
-  }
-  
-  
 private:
   
   EngineLoop loop_;
-  
 };
 
 
@@ -83,10 +76,9 @@ using namespace emscripten;
 EMSCRIPTEN_BINDINGS(bindings) {
   class_<Engine>("Engine")
   .constructor<>()
-  .function("Go", &Engine::Go)
+  .function("Send", &Engine::Send)
   .function("CanStep", &Engine::CanStep)
   .function("Step", &Engine::Step)
-  .function("Stop", &Engine::Stop)
   ;
 }
   
