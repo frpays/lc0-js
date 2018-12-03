@@ -50,10 +50,8 @@ public:
   }
 
 
-  void Send(std::string text) {
-    GoParams goParams;
-    goParams.infinite=true;
-    loop_.Consume(text);
+  void Send(std::string what) {
+    loop_.Consume(what);
   }
   
   bool CanStep() {
