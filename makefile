@@ -20,7 +20,8 @@ EMMC_THREADS_FLAGS=
 #-s USE_PTHREADS=1
 
 EMMC_MEMORY_FLAGS=\
--s ALLOW_MEMORY_GROWTH=1
+-s ALLOW_MEMORY_GROWTH=1 \
+-s DISABLE_EXCEPTION_CATCHING=0 
 
 EMCC=emcc \
 -std=gnu++14 \
@@ -102,13 +103,15 @@ ADDITIONAL_OBJECTS=\
 www/lc0.wast \
 www/lc0.html
 
+MAIN_JS=main.js
+
 all:: $(TARGETS)
 
 dist_clean::
 	rm -f $(TARGETS) $(ADDITIONAL_OBJECTS)
 
-$(TARGETS): $(OBJECTS) weights.txt
-	$(EMCC)  --preload-file weights.txt -o www/lc0.js $(OBJECTS) $(PROTOBUF_OBJECTS)
+$(TARGETS): $(OBJECTS) weights.txt $(MAIN_JS)
+	$(EMCC)  --preload-file weights.txt --pre-js $(MAIN_JS) -o www/lc0.js $(OBJECTS)
 
 www/lc0.html:
 	$(EMCC) -o lc0.html $(OBJECTS) $(PROTOBUF_OBJECTS)
@@ -116,6 +119,6 @@ www/lc0.html:
 server:
 	cd $(ROOT)/www && python -m SimpleHTTPServer 8000
 
-client:
+test:
 	'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'  http://localhost:8000/engine.html
 	
