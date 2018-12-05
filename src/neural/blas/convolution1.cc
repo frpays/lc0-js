@@ -62,6 +62,7 @@ void Convolution1::Forward(const size_t batch_size, const size_t input_channels,
                 kSquares);             // ldc, leading rank of B
      */
     
+    /*
     for (size_t k=0; k<kSquares; k++) {
       for (size_t i=0; i<output_channels; i++) {
         float acc=0;
@@ -71,6 +72,10 @@ void Convolution1::Forward(const size_t batch_size, const size_t input_channels,
         batch_output[i*kSquares+k]=acc;
       }
     }
+     */
+    
+    MatrixMultiply<float, RowMajor, RowMajor, RowMajor>(output_channels, kSquares, input_channels, weights, batch_input, batch_output);
+
 
     
     

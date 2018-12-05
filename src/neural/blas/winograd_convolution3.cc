@@ -289,6 +289,7 @@ void WinogradConvolution3::Sgemm(const size_t batch_size, const float* weights,
                 (int)output_channels);       // ldM
   */
     
+    /*
     for (size_t k=0; k<batch_tiles; k++) {
       for (size_t i=0; i<output_channels; i++) {
         float acc=0;
@@ -297,9 +298,10 @@ void WinogradConvolution3::Sgemm(const size_t batch_size, const float* weights,
         }
         batch_outputs[i+output_channels*k]=acc;
       }
-    } 
+    } */
     
-    
+    MatrixMultiply<float, ColMajor, ColMajor, ColMajor> (output_channels, batch_size * kTiles, input_channels, &weights[offset_u], &V_[offset_v],  &M_[offset_m]);
+
   }
 
 #endif

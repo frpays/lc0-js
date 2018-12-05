@@ -85,6 +85,7 @@ void FullyConnectedLayer::Forward1D(size_t batch_size, const size_t input_size,
   
   */
   
+  /*
   for (size_t k=0; k<batch_size; k++) {
     for (size_t i=0; i<output_size; i++) {
       float acc=0;
@@ -94,6 +95,9 @@ void FullyConnectedLayer::Forward1D(size_t batch_size, const size_t input_size,
       outputs[i+output_size*k]=acc;
     }
   }
+   */
+  
+  MatrixMultiply<float, RowMajor, ColMajor, ColMajor> (output_size, batch_size, input_size, weights, inputs, outputs);
   
   if (apply_relu) {
     for (size_t i = 0; i < batch_size; i++) {
