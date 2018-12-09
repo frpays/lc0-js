@@ -1,6 +1,7 @@
 ROOT=$(shell pwd)
 
 WEIGHTS_FILE=weights/weights_9155.txt.gz
+TEST_FILE=weights/test_9155.txt.gz
 
 all::
 
@@ -10,7 +11,7 @@ dist_clean:: clean
 
 
 EMMC_OPTIM_FLAGS=\
--O2
+-O3
 
 EMMC_DEBUG_FLAGS=\
 #-g
@@ -90,6 +91,23 @@ weights.txt: $(WEIGHTS_FILE)
 
 clean::
 	rm -f weights.txt
+
+
+##
+## Temporarily, for main.js
+##
+
+www/weights.txt : weights.txt
+	cp $< $@
+
+www/test.txt : $(TEST_FILE)
+	gunzip -c $< > $@
+
+all:: www/weights.txt www/test.txt
+
+dist_clean::
+	rm -f www/weights.txt www/test.txt
+
 ##
 ## LINK
 ##
