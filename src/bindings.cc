@@ -46,7 +46,6 @@ public:
     std::cout << "       _" << std::endl;
     std::cout << "|   _ | |" << std::endl;
     std::cout << "|_ |_ |_| v" << GetVersionStr() << " for js, built " << __DATE__ << std::endl;
-    
   }
 
 
