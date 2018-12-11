@@ -359,7 +359,20 @@ var Network = function() {
 
 		},
 
-		forward: function(batch_size, input, policy, value) {
+
+forward: function(batch_size, input, policy, value) {
+
+	if (!this.model)
+	return;
+
+	var input_array = new Float32Array(Module.HEAPU8.buffer, input, 112*64*batch_size);
+	var policy_array = new Float32Array(Module.HEAPU8.buffer, policy, 1858*batch_size);
+	var value_array = new Float32Array(Module.HEAPU8.buffer, policy, batch_size);
+	this.do_forward(batch_size, input_array, policy_array, value_array);
+},
+
+
+		do_forward: function(batch_size, input, policy, value) {
 
 			var self=this;
 			function work() {
@@ -389,20 +402,4 @@ var Network = function() {
 	return Network;
 
 }();
-
-
-
-//console.log("WebGL support: "+(gl_support ? "yes" : "no"));
-
-var network=new Network();
-network.load();
-
-
-function lczero_forward(batch_size, input, policy, value) {
-	var input_array = new Float32Array(Module.HEAPU8.buffer, input, 112*64*batch_size);
-	var policy_array = new Float32Array(Module.HEAPU8.buffer, policy, 1858*batch_size);
-	var value_array = new Float32Array(Module.HEAPU8.buffer, policy, batch_size);
-	network.forward(batch_size, input_array, policy_array, value_array);
-}
-
 
