@@ -21,6 +21,46 @@ The result of the compilation is in the folder www. You can run a local webserve
 Then navigate with a browser http://localhost:8000/
 
 
+### Issues
+
+- The node garbagge collection has been simply commented-out. It was thread-based (see Porting) and I could not figure out how to make it sequential. This is should not be very difficult to fix. In the mean time this means that the browser will eventually run out of memory.
+
+
+### Porting
+
+# Weights
+
+Most of the original code base compiles out of the box to javascript with emscripten but there are some parts that won't.
+
+Notably:
+
+  * protobuf: this library is highly optimised for c++. Not only it won't compile, but we have no use of it on the c++ side as the network is loaded by the javascript backend.
+
+  * zlib: this library does not build compile either, we and we also don't need it on the c++ side.
+
+As a result, the loader.cc and loader.h files are the latest versions of these files that does not reference protobuf and zlib.
+
+Consequently weights file loading is simply deactivated on c++ side.
+
+# Backends
+
+None of the original backends make it, except the blas one, provided that the blas sgemm calls have been replaced with c++ routines. The blas backend was only necessary for early tests. It has very low performances compared to the tensorflowjs once.
+
+A new javascript backend has been written from scratch over tensorflowjs. It fetches the weight file with a http request and decodes it (either txt.gz or protobuf gunzipped).
+
+Currently the default weights is the 9554 network. But it can easily be switched to a 20b protobuf network or a network provided by the user (through a file load dialog).
+
+# Threads
+
+There is basic thread support in emscripten, but it will simply won't work here. The search and the UCI command executes as a workflow.
+
+
+# Web worker
+
+The engine search is a very resource intensive task. In order to make graphical interface as responsive as possible, the engine runs inside a web worker. The web worker is a generally well supported feature among browsers, but another necessary feature is not: the offscreen canvas. Without offscreen canvas, tensorflowjs cannot make use of the WebGL extensions to accelerate the network inference.
+This is why, depending on the browser, the lc0 engine will work either inside a worker or not. At the time I write this, Chrome 71 supports the offscreen canvas, Firefox 64 only on demand and Safari won't. When the offscreen canvas support is not detected, the engine runs inside the main javascript loop and the interface may feel less responsive.
+
+
 ## Original lc0 Readme:
 
 
