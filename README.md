@@ -1,3 +1,29 @@
+### lc0-js
+
+lc0-js is an emscripten port of the lc0 engine, very much like [stockfish-js](https://github.com/exoticorn/stockfish-js/) is a port of stockfish to the browser.
+The lc0 engine runs into the browser, without need of any pluggins. It uses [tensorflowjs](https://js.tensorflow.org/) to run the neural network, which may or not utilise the client GPU to accelerate the computations.
+
+### Example
+
+You can play with the engine online here: [https://frpays.github.io/lc0-js/](https://frpays.github.io/lc0-js/).
+
+### Compiling
+
+You will need a unix-like operating system (MacOS or Linux), install [Emscripten](http://kripken.github.io/emscripten-site/) and have emcc in your PATH. You can then build lc0-js typing:
+
+     make
+
+
+The result of the compilation is in the folder www. You can run a local webserver using:
+
+     make run_server
+
+Then navigate with a browser http://localhost:8000/
+
+
+## Original lc0 Readme:
+
+
 [![CircleCI](https://circleci.com/gh/LeelaChessZero/lc0.svg?style=shield)](https://circleci.com/gh/LeelaChessZero/lc0)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/3245b83otdee7oj7?svg=true)](https://ci.appveyor.com/project/leelachesszero/lc0)
 
