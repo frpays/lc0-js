@@ -25,9 +25,11 @@
   Program grant you additional permission to convey the resulting work.
 */
 
+#ifndef EMSCRIPTEN
+
 #include "engine.h"
 #include "benchmark/benchmark.h"
-#include "selfplay/loop.h"
+//#include "selfplay/loop.h"
 #include "utils/commandline.h"
 #include "utils/logging.h"
 #include "version.h"
@@ -40,14 +42,14 @@ int main(int argc, const char** argv) {
   using namespace lczero;
   CommandLine::Init(argc, argv);
   CommandLine::RegisterMode("uci", "(default) Act as UCI engine");
-  CommandLine::RegisterMode("selfplay", "Play games with itself");
+  //CommandLine::RegisterMode("selfplay", "Play games with itself");
   CommandLine::RegisterMode("benchmark", "Quick benchmark");
 
-  if (CommandLine::ConsumeCommand("selfplay")) {
+  /*if (CommandLine::ConsumeCommand("selfplay")) {
     // Selfplay mode.
     SelfPlayLoop loop;
     loop.RunLoop();
-  } else if (CommandLine::ConsumeCommand("benchmark")) {
+  } else */if (CommandLine::ConsumeCommand("benchmark")) {
     // Benchmark mode.
     Benchmark benchmark;
     benchmark.Run();
@@ -59,3 +61,7 @@ int main(int argc, const char** argv) {
     loop.RunLoop();
   }
 }
+
+#endif
+
+

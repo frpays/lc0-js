@@ -1,4 +1,5 @@
 build/
+MacBuild/
 testdata/
 LC0VSProj/
 CUDA_NN/
@@ -8,3 +9,4 @@ subprojects/*
 !subprojects/*.wrap
 lc0.xcodeproj/
 *.swp
+obj

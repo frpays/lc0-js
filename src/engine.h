@@ -78,8 +78,12 @@ class EngineController {
   // Must not block.
   void Stop();
 
-  SearchLimits PopulateSearchLimits(int ply, bool is_black,
-      const GoParams& params,
+  // Emscripten bindings
+  bool CanStep();
+  void Step();
+
+  SearchLimits PopulateSearchLimits(
+      int ply, bool is_black, const GoParams& params,
       std::chrono::steady_clock::time_point start_time);
 
  private:
@@ -122,6 +126,10 @@ class EngineController {
 class EngineLoop : public UciLoop {
  public:
   EngineLoop();
+
+  // Emscripten bindings
+  bool CanStep();
+  void Step();
 
   void RunLoop() override;
   void CmdUci() override;

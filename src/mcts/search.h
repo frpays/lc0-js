@@ -69,6 +69,9 @@ class Search {
   // Starts worker threads and returns immediately.
   void StartThreads(size_t how_many);
 
+  // Run one iteration (Emscripten)
+  void RunOneIteration();
+  
   // Starts search with k threads and wait until it finishes.
   void RunBlocking(size_t threads);
 

@@ -598,6 +598,11 @@ void Search::StartThreads(size_t how_many) {
     });
   }
 }
+    
+void Search::RunOneIteration() {
+  SearchWorker worker(this, params_);
+  worker.ExecuteOneIteration();
+}
 
 void Search::RunBlocking(size_t threads) {
   StartThreads(threads);

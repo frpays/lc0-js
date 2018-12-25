@@ -109,12 +109,11 @@ std::unique_ptr<Network> NetworkFactory::LoadNetwork(
   std::string backend_options =
       options.Get<std::string>(kBackendOptionsId.GetId());
 
-  if (net_path == kAutoDiscover) {
-    net_path = DiscoverWeightsFile();
-  } else {
-    CERR << "Loading weights file from: " << net_path;
-  }
-  Weights weights = LoadWeightsFromFile(net_path);
+#ifdef EMSCRIPTEN
+  Weights weights;
+#else
+  Weights weights = LoadWeights();
+#endif
 
   OptionsDict network_options(&options);
   network_options.AddSubdictFromString(backend_options);

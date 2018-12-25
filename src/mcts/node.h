@@ -36,7 +36,7 @@
 #include "chess/callbacks.h"
 #include "chess/position.h"
 #include "neural/encoder.h"
-#include "neural/writer.h"
+//#include "neural/writer.h"
 #include "utils/mutex.h"
 
 namespace lczero {
@@ -187,10 +187,12 @@ class Node {
   // in depth parameter, and returns true if it was indeed updated.
   bool UpdateFullDepth(uint16_t* depth);
 
+  /*
   V3TrainingData GetV3TrainingData(GameResult result,
                                    const PositionHistory& history,
                                    FillEmptyHistory fill_empty_history) const;
-
+*/
+  
   // Returns range for iterating over edges.
   ConstIterator Edges() const;
   Iterator Edges();
@@ -271,11 +273,13 @@ class Node {
 #define __arm__
 #endif
 
+#ifndef EMSCRIPTEN
 // A basic sanity check. This must be adjusted when Node members are adjusted.
 #if defined(__i386__) || (defined(__arm__) && !defined(__aarch64__))
 static_assert(sizeof(Node) == 40, "Unexpected size of Node for 32bit compile");
 #else
 static_assert(sizeof(Node) == 64, "Unexpected size of Node");
+#endif
 #endif
 
 // Contains Edge and Node pair and set of proxy functions to simplify access
