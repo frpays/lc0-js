@@ -1,4 +1,4 @@
-### lc0-js
+## lc0-js
 
 lc0-js is an emscripten port of the lc0 engine, very much like [stockfish-js](https://github.com/exoticorn/stockfish-js/) is a port of stockfish to the browser.
 The lc0 engine runs into the browser, without need of any pluggins. It uses [tensorflowjs](https://js.tensorflow.org/) to run the neural network, which may or not utilise the client GPU to accelerate the computations.
@@ -28,7 +28,7 @@ Then navigate with a browser http://localhost:8000/
 
 ### Porting
 
-# Weights
+#### Weights
 
 Most of the original code base compiles out of the box to javascript with emscripten but there are some parts that won't.
 
@@ -42,7 +42,7 @@ As a result, the loader.cc and loader.h files are the latest versions of these f
 
 Consequently weights file loading is simply deactivated on c++ side.
 
-# Backends
+##### Backends
 
 None of the original backends make it, except the blas one, provided that the blas sgemm calls have been replaced with c++ routines. The blas backend was only necessary for early tests. It has very low performances compared to the tensorflowjs once.
 
@@ -50,12 +50,12 @@ A new javascript backend has been written from scratch over tensorflowjs. It fet
 
 Currently the default weights is the 9554 network. But it can easily be switched to a 20b protobuf network or a network provided by the user (through a file load dialog).
 
-# Threads
+##### Threads
 
 There is basic thread support in emscripten, but it will simply won't work here. The search and the UCI command executes as a workflow.
 
 
-# Web worker
+##### Web worker
 
 The engine search is a very resource intensive task. In order to make graphical interface as responsive as possible, the engine runs inside a web worker. The web worker is a generally well supported feature among browsers, but another necessary feature is not: the offscreen canvas. Without offscreen canvas, tensorflowjs cannot make use of the WebGL extensions to accelerate the network inference.
 This is why, depending on the browser, the lc0 engine will work either inside a worker or not. At the time I write this, Chrome 71 supports the offscreen canvas, Firefox 64 only on demand and Safari won't. When the offscreen canvas support is not detected, the engine runs inside the main javascript loop and the interface may feel less responsive.
