@@ -61,7 +61,6 @@ The engine search is a very resource intensive task. In order to make graphical 
 This is why, depending on the browser, the lc0 engine will work either inside a worker or not. At the time I write this, Chrome 71 supports the offscreen canvas, Firefox 64 only on demand and Safari won't. When the offscreen canvas support is not detected, the engine runs inside the main javascript loop and the interface may feel less responsive.
 
 
-
 ## Original lc0 Readme:
 
 
