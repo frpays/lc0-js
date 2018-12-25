@@ -1,7 +1,7 @@
 ### lc0-js
 
 lc0-js is an emscripten port of the lc0 engine, very much like [stockfish-js](https://github.com/exoticorn/stockfish-js/) is a port of stockfish to the browser.
-The lc0 engine runs into the browser, without need of any pluggins. It uses [tensorflowjs](https://js.tensorflow.org/) to run the neural network, which may or not utilise the client GPU to accelerate the computations.
+The lc0 engine runs into the browser, without any server computational resources, without need of any pluggins, and possibly offline. [tensorflowjs](https://js.tensorflow.org/) runs the neural network, and uses the GPU to accelerate the computations.
 
 ### Example
 
@@ -18,19 +18,19 @@ The result of the compilation is in the folder www. You can run a local webserve
 
      make run_server
 
-Then navigate with a browser http://localhost:8000/
+Browse to http://localhost:8000/ in order to run your local example.
 
 
 ### Issues
 
-- The node garbagge collection has been simply commented-out. It was thread-based (see Porting) and I could not figure out how to make it sequential. This is should not be very difficult to fix. In the mean time this means that the browser will eventually run out of memory.
+- The node garbage collection is temporarily commented-out. It was thread-based (see Porting) and I could not figure out how to make it sequential (yet). Until it is fixed, the engine leaks nodes during the search process, which means that the browser will eventually run out of memory.
 
 
 ### Porting
 
 # Weights
 
-Most of the original code base compiles out of the box to javascript with emscripten but there are some parts that won't.
+Most of the original code base compiles right out of the box to javascript with emscripten but there are some parts that won't.
 
 Notably:
 
@@ -38,27 +38,29 @@ Notably:
 
   * zlib: this library does not build compile either, we and we also don't need it on the c++ side.
 
-As a result, the loader.cc and loader.h files are the latest versions of these files that does not reference protobuf and zlib.
+As a result, all references to protobug and zlib have been removed. No file is loaded on the c++ side and the Weight structure is empty. (Except when the Blas backend is instantiated, generally for debugging purposes. In this case, the only weight file supported format is non-compressed text).
 
-Consequently weights file loading is simply deactivated on c++ side.
 
 # Backends
 
-None of the original backends make it, except the blas one, provided that the blas sgemm calls have been replaced with c++ routines. The blas backend was only necessary for early tests. It has very low performances compared to the tensorflowjs once.
+None of the original backends can be compiled to javascript, except Blas, provided that the matrix multiply calls have been replaced with c++ routines. The Blas backend still exists for debugging purposes but is much slower than tensorflowjs and is normally not instantiated.
 
-A new javascript backend has been written from scratch over tensorflowjs. It fetches the weight file with a http request and decodes it (either txt.gz or protobuf gunzipped).
+A new javascript backend has been written from scratch over tensorflowjs. The backend fetches the weight file with a http request, decodes it (either txt.gz or protobuf gunzipped) and uses tensorflowjs to handle the computations.
 
-Currently the default weights is the 9554 network. But it can easily be switched to a 20b protobuf network or a network provided by the user (through a file load dialog).
+Currently the default network is the 9155 network. But it can easily be switched to a bigger 20b protobuf network or, alternatively, a network provided by the user (through a file load dialog).
+
+Note that if tensorflowjs falls back to CPU due to lack of WebGL support of lack of GPU, the computations are not only slow, but wrong because the tensors are no longer in the expected format.
+
 
 # Threads
 
-There is basic thread support in emscripten, but it will simply won't work here. The search and the UCI command executes as a workflow.
+There is basic thread support in emscripten, but it is too sketchy and won't work here. The search module and the UCI command processor have been modified to run as a workflow.
 
 
 # Web worker
 
-The engine search is a very resource intensive task. In order to make graphical interface as responsive as possible, the engine runs inside a web worker. The web worker is a generally well supported feature among browsers, but another necessary feature is not: the offscreen canvas. Without offscreen canvas, tensorflowjs cannot make use of the WebGL extensions to accelerate the network inference.
-This is why, depending on the browser, the lc0 engine will work either inside a worker or not. At the time I write this, Chrome 71 supports the offscreen canvas, Firefox 64 only on demand and Safari won't. When the offscreen canvas support is not detected, the engine runs inside the main javascript loop and the interface may feel less responsive.
+The engine search is a very resource intensive task. In order to make the graphical interface as responsive as possible, the engine runs inside a web worker when possible. The web worker is a generally well supported feature among browsers, but not yet the offscreen canvas. Without offscreen canvas, tensorflowjs cannot make use of the WebGL extensions to accelerate the network inference.
+This is why, depending on the browser, the lc0 engine will work either inside a worker or not. At the time of this initial release, Chrome 71 supports the offscreen canvas, Firefox 64 supports it on demand and Safari still does not. Without offscreen canvas support, the engine runs inside the main javascript loop and the interface may feel less responsive.
 
 
 ## Original lc0 Readme:
