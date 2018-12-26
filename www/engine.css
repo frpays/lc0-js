@@ -23,7 +23,7 @@ body {
 }
 
 #title {
-	padding: 10px 5px;
+	padding: 5px 5px;
 	font-size: 150%;
 	font-weight: bold;
   font-family: 'Sedgwick Ave', cursive;
@@ -34,16 +34,10 @@ body {
 	font-size: 70%;
 }
 
-#credits {
-	float: left;
-	font-size: 70%;
-}
-
 #board {
 	width: 400px;
 	float: left;
 }
-
 
 #movelist {
 	padding: 10px;
@@ -75,8 +69,8 @@ body {
 }
 
 #control {
-    float: left;
-    width: 100%;
+  float: left;
+  width: 100%;
 }
 
 #error {
@@ -145,6 +139,7 @@ body {
 }
 
 #credits {
+  font-size: 70%;
   float: left;
   width: 100%;
 }

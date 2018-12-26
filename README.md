@@ -1,6 +1,6 @@
 # lc0-js
 
-lc0-js is an emscripten port of the lc0 engine, very much like [stockfish-js](https://github.com/exoticorn/stockfish-js/) is a port of stockfish to the browser.
+lc0-js is an emscripten port of the [lc0 engine](https://github.com/LeelaChessZero/lc0), very much like [stockfish-js](https://github.com/exoticorn/stockfish-js/) is a port of stockfish to the browser.
 The lc0 engine runs into the browser, without any server computational resources, without need of any pluggins, and possibly offline. [tensorflowjs](https://js.tensorflow.org/) runs the neural network, and uses the GPU to accelerate the computations.
 
 ## Example
