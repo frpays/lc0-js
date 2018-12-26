@@ -1,8 +1,5 @@
 ROOT=$(shell pwd)
 
-WEIGHTS_FILE=weights/weights_9155.txt.gz
-TEST_FILE=weights/test_9155.txt.gz
-
 all::
 
 clean::
@@ -84,25 +81,63 @@ clean::
 	rm -f $(OBJECTS)
 
 ##
-## Weights
+## BLAS (debug)
 ##
 
-weights.txt: $(WEIGHTS_FILE)
-	gunzip -c $< > $@
-
-clean::
-	rm -f weights.txt
+#
+#WEIGHTS_FILE=weights/weights_9155.txt.gz
+#TEST_FILE=weights/test_9155.txt.gz
+#
+#weights.txt: $(WEIGHTS_FILE)
+#	gunzip -c $< > $@
+#
+#www/weights.txt.gz : $(WEIGHTS_FILE)
+#	cp $< $@
+#
+#www/test.txt.gz : $(TEST_FILE)
+#	cp $< $@
+#
+#clean::
+#	rm -f weights.txt
+#
+#dist_clean::
+#	rm -f www/weights.txt.gz www/test.txt.gz
+#
+#$(TARGETS): $(OBJECTS) weights.txt $(MAIN_JS)
+#	$(EMCC) --preload-file weights.txt --pre-js $(MAIN_JS) -o www/lc0.js $(OBJECTS)
 
 
 ##
-## Temporarily, for main.js
+## Bundled networks
 ##
 
-www/weights.txt.gz : $(WEIGHTS_FILE)
+WEIGHTS_LIST=weights/bundled.txt
+
+WEIGHTS_FILES=$(shell cat $(WEIGHTS_LIST))
+
+COPIED_WEIGHTS_FILES=$(WEIGHTS_FILES:%=www/%)
+
+all:: www/networks.txt $(COPIED_WEIGHTS_FILES)
+
+$(WEIGHTS_FILES:%=weights/%):
+	cd weights && make
+
+www/%: weights/% $(WEIGHTS_LIST)
 	cp $< $@
 
-www/test.txt.gz : $(TEST_FILE)
+www/networks.txt: $(WEIGHTS_LIST)
 	cp $< $@
+
+dist_clean::
+	rm -f www/networks.txt $(COPIED_WEIGHTS_FILES)
+
+
+
+##
+## protobuf
+##
+
+all:: www/pb.proto
 
 www/pb.proto:  libs/lczero-common/proto/net.proto
 	cp $< $@
@@ -110,10 +145,6 @@ www/pb.proto:  libs/lczero-common/proto/net.proto
 dist_clean::
 	rm -f www/pb.proto
 
-all:: www/weights.txt.gz www/test.txt.gz www/pb.proto
-
-dist_clean::
-	rm -f www/weights.txt.gz www/test.txt.gz
 
 ##
 ## LINK
@@ -134,9 +165,6 @@ all:: $(TARGETS)
 
 dist_clean::
 	rm -f $(TARGETS) $(ADDITIONAL_OBJECTS)
-
-#$(TARGETS): $(OBJECTS) weights.txt $(MAIN_JS)
-#	$(EMCC) --preload-file weights.txt --pre-js $(MAIN_JS) -o www/lc0.js $(OBJECTS)
 
 $(TARGETS): $(OBJECTS) $(MAIN_JS)
 	$(EMCC) --pre-js $(MAIN_JS) -o www/lc0.js $(OBJECTS)

@@ -51,8 +51,16 @@
       <div id="variations"></div>
 	  </div>
     <div id="parameters" class="tabcontent">
+
+      <fieldset>
+        <legend>Network</legend>
+        <select id="network">
+        </select>
+        <button class="applyButton" id="applyNetwork">Restart</button>
+      </fieldset>
     
       <fieldset>
+
         <legend>Play strength</legend>
         <table>
         <tr>
@@ -78,7 +86,7 @@
           </td>
         </tr>
         </table>
-        <button id="applyParams">Apply</button>
+        <button class="applyButton" id="applyParams">Apply</button>
       </fieldset>
 
       <input type="checkbox" id="logs" name="logs" checked>
@@ -110,7 +118,6 @@
     <label><input type="radio" name="mode" value="analysis" checked>&nbsp;Analysis&nbsp;</label>
     <button id="goBtn">Go</button>
     <button id="stopBtn">Stop</button>
-    <button id="restartBtn">Restart</button>
   </div>
   <div class="buttons">
     <label><input type="radio" name="mode" value="play">&nbsp;Play&nbsp;</label>

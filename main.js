@@ -22,10 +22,8 @@ const LC0_DEPENDENCIES = [
     id: 'tensorflow',
     url: 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.14.1/dist/tf.min.js'
   },
+  {id: 'pako', url: 'https://cdn.jsdelivr.net/pako/1.0.3/pako.min.js'},
   {
-    id: 'pako',
-    url: 'https://cdn.jsdelivr.net/pako/1.0.3/pako.min.js'
-  }, {
     id: 'protobuf',
     url: 'https://cdn.rawgit.com/dcodeIO/protobuf.js/6.8.8/dist/protobuf.min.js'
   },
@@ -35,7 +33,6 @@ const LC0_DEPENDENCIES = [
 /* Web worker */
 if (typeof WorkerGlobalScope !== 'undefined' &&
     self instanceof WorkerGlobalScope) {
-
   /*
    * Missing in Firefox 64
    */
@@ -79,38 +76,6 @@ if (typeof WorkerGlobalScope !== 'undefined' &&
   }
 }
 
-var engine = undefined;
-var network = null;
-var network_loaded = false;
-var started = false;
-
-
-self.console = {
-
-  log: function(line) {
-    postMessage(line);
-  },
-  info: function(line) {
-    postMessage([line, 'info']);
-  },
-  warn: function(line) {
-    postMessage([line, 'warn']);
-  },
-  error: function(line) {
-    postMessage([line, 'error']);
-  }
-};
-
-
-onmessage = function(e) {
-  try {
-    if (!started) return;
-    engine.Send(e.data);
-    loop();
-  } catch (exc) {
-    console.error('Exception: ' + exc);
-  }
-};
 
 
 function readFile(url) {
@@ -151,8 +116,10 @@ Network = function() {
 
   Network.prototype = {
 
-    load: function() {
-      return readFile('weights.txt.gz').then(this.decodeText.bind(this));
+    load: function(name) {
+      var decoder =
+          name.match(/^.*\.txt\.gz$/) ? this.decodeText : this.decodeProtobuf;
+      return readFile(name).then(decoder.bind(this));
       // return readFile('weights.dat.gz').then(this.decodeProtobuf.bind(this));
     },
 
@@ -511,14 +478,84 @@ Network = function() {
 }();
 
 
+
+Future = function() {
+  Future = function() {
+    this.resolves = [];
+    this.value = undefined;
+  };
+
+  Future.prototype = {
+
+    get: function() {
+      future = this;
+      return new Promise(function(resolve, reject) {
+        future.resolves.push(resolve);
+        if (future.value) resolve(future.value);
+      });
+    },
+
+    set: function(value) {
+      if (this.value) return;
+      this.value = value;
+      for (var i = 0; i < this.resolves.length; i++) {
+        this.resolves[i](this.value);
+      }
+    }
+  };
+
+  return Future;
+}();
+
+
+network_name = new Future();
+
+var engine = undefined;
+var network = null;
+var network_is_loaded = false;
+var started = false;
+
+
+self.console = {
+
+  log: function(line) {
+    postMessage(line);
+  },
+  info: function(line) {
+    postMessage([line, 'info']);
+  },
+  warn: function(line) {
+    postMessage([line, 'warn']);
+  },
+  error: function(line) {
+    postMessage([line, 'error']);
+  }
+};
+
+
+onmessage = function(e) {
+  try {
+    var message = e.data;
+    if (!started) {
+      var match = message.match(/^load ([^ ]*)$/);
+      if (match) network_name.set(match[1]);
+      return;
+    }
+    engine.Send(message);
+    loop();
+  } catch (exc) {
+    console.error('Exception: ' + exc);
+  }
+};
+
 function module_ready() {
   engine = new Module.Engine();
-  if (!network_loaded) return;
+  if (!network_is_loaded) return;
   start_engine();
 }
 
-function network_load() {
-  network_loaded = true;
+function network_loaded() {
+  network_is_loaded = true;
   if (!engine) return;
   start_engine();
 }
@@ -531,9 +568,12 @@ function start_engine() {
 
 function load_network() {
   network = new Network();
-  network.load().then(network_load).catch(function(err) {
-    console.log('Error: ' + new Error(err.message));
-  });
+  network_name.get()
+      .then(network.load.bind(network))
+      .then(network_loaded)
+      .catch(function(err) {
+        console.log('Error: ' + new Error(err.message));
+      });
 }
 
 Module['onRuntimeInitialized'] = module_ready;
