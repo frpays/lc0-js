@@ -425,7 +425,7 @@ Network = function() {
       v_flow = layer.apply(v_flow);
 
       this.model = tf.model({inputs: this.input, outputs: [p_flow, v_flow]});
-      this.log('Network successfully build!');
+      this.log('Network successfully built!');
     },
 
     loadTest: function() {
