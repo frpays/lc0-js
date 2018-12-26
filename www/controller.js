@@ -54,7 +54,6 @@ var Controller = function() {
     $('#flipBtn').on('click', this.board.flip);
     $('#goBtn').on('click', this.go.bind(this));
     $('#stopBtn').on('click', this.stop.bind(this));
-    $('#restartBtn').on('click', this.createEngine.bind(this));
     $('#error').on('click', this.hideError.bind(this));
 
     $('#playWhiteBtn').on('click', this.playWhite.bind(this));
@@ -67,11 +66,16 @@ var Controller = function() {
     $('#navFwdBtn').on('click', this.navigateForward.bind(this));
     $('#navEndBtn').on('click', this.navigateEnd.bind(this));
 
-    $('#loadPgnBtn').on('click', function() { $('#pgnToLoad').click(); } );
+    $('#loadPgnBtn').on('click', function() {
+      $('#pgnToLoad').click();
+    });
     $('#pgnToLoad').change(this.loadPgn.bind(this));
 
     $('#applyParams').on('click', this.applyParams.bind(this));
     $('#logs').change(this.displayLogChanged.bind(this));
+
+    this.populateNetworks();
+    $('#applyNetwork').on('click', this.applyNetwork.bind(this));
 
     this.output = document.getElementById('output');
 
@@ -79,12 +83,12 @@ var Controller = function() {
     this.moveList = [];
     this.moveIndex = 0;
 
-    this.playGoCmd="go movetime 5000";
+    this.playGoCmd = 'go movetime 5000';
 
     this.createEngine();
 
     this.mode = kModeAnalysis;
-    this.humanSide=null;
+    this.humanSide = null;
 
     this.updateButtons();
     this.updateStatus();
@@ -96,14 +100,34 @@ var Controller = function() {
       this.game.reset();
       this.board.start(true);
       this.moveList = [];
-      this.moveIndex=0;
-      this.gameResult=null;
+      this.moveIndex = 0;
+      this.gameResult = null;
 
       this.updateButtons();
       this.updateStatus();
 
-      if (this.mode==kModePlay)
-        this.humanSide="w";
+      if (this.mode == kModePlay) this.humanSide = 'w';
+    },
+
+
+    populateNetworks() {
+      var urls = null;
+      $.ajax({
+        url: 'networks.txt',
+        async: false,
+        success: function(text) {
+          urls = text.split(/\r?\n/);
+        }
+      });
+      for (var i = 0; i < urls.length; i++) {
+        var url = urls[i];
+        if (!url || url.length == 0) continue;
+        var match = url.match(/^([^.]*)\..*$/);
+        var label = match ? match[1] : url;
+        $('#network')
+            .append($('<option></option>').attr('value', url).text(label));
+        if (i == 0) this.weightsUrl = url;
+      }
     },
 
     modeChanged() {
@@ -111,93 +135,94 @@ var Controller = function() {
       var newMode = selected.val() == 'play' ? kModePlay : kModeAnalysis;
       if (newMode == this.mode) return;
       this.mode = newMode;
-      if (this.mode==kModePlay) {
-        this.humanSide=this.game.turn();
+      if (this.mode == kModePlay) {
+        this.humanSide = this.game.turn();
         this.cancelSearch();
-      }
-      else {
-        this.humanSide=null;
+      } else {
+        this.humanSide = null;
         this.cancelSearch();
       }
       this.updateButtons();
     },
 
-
     applyParams() {
       var selected = $('input[type=\'radio\'][name=\'go\']:checked');
       if (selected.val() == 'nodes') {
-        var nodes=$("#gonodes").val();
-        this.playGoCmd="go nodes "+nodes;
+        var nodes = $('#gonodes').val();
+        this.playGoCmd = 'go nodes ' + nodes;
+      } else {
+        var movetime = $('#gomovetime').val();
+        this.playGoCmd = 'go movetime ' + movetime;
       }
-      else {
-        var movetime=$("#gomovetime").val();
-        this.playGoCmd="go movetime "+movetime;
-      }
+    },
+
+    applyNetwork() {
+      this.weightsUrl = $('#network').find(':selected').val();
+      this.createEngine();
     },
 
     displayLogChanged() {
-      var choice=$("#logs").is(':checked');
+      var choice = $('#logs').is(':checked');
       if (choice)
-        $("#output").show();
+        $('#output').show();
       else
-        $("#output").hide();
+        $('#output').hide();
     },
 
     updateStatus() {
-      var lastMove="";
-      if (this.moveIndex>0) {
-        var san=this.moveList[this.moveIndex-1].san;
-        var fullMoves=(this.moveIndex+1)>>1;
-        var turn=this.game.turn();
-        if (turn=='w') {
-          lastMove="After "+fullMoves+". ... "+san;
-        }
-        else {
-          lastMove="After "+fullMoves+". "+san;
+      var lastMove = '';
+      if (this.moveIndex > 0) {
+        var san = this.moveList[this.moveIndex - 1].san;
+        var fullMoves = (this.moveIndex + 1) >> 1;
+        var turn = this.game.turn();
+        if (turn == 'w') {
+          lastMove = 'After ' + fullMoves + '. ... ' + san;
+        } else {
+          lastMove = 'After ' + fullMoves + '. ' + san;
         }
       }
 
-      var pgn="";
-      for (var i=0; i<this.moveList.length; i++) {
-        if (i%2==0) {
-          if (pgn.length>0)
-            pgn+=" ";
-          pgn+=(1+(i>>1))+".";
+      var pgn = '';
+      for (var i = 0; i < this.moveList.length; i++) {
+        if (i % 2 == 0) {
+          if (pgn.length > 0) pgn += ' ';
+          pgn += (1 + (i >> 1)) + '.';
         }
-        var san=this.moveList[i].san;
-        pgn+=" ";
-        var current=i+1==this.moveIndex;
-        if (current)
-          pgn+="<b>";
-        pgn+=san;
-        if (current)
-          pgn+="</b>";
+        var san = this.moveList[i].san;
+        pgn += ' ';
+        var current = i + 1 == this.moveIndex;
+        if (current) pgn += '<b>';
+        pgn += san;
+        if (current) pgn += '</b>';
       }
       if (this.gameResult) {
-        pgn+=" "+this.gameResult.outcome+
-          " ("+this.gameResult.reason+")";
+        pgn +=
+            ' ' + this.gameResult.outcome + ' (' + this.gameResult.reason + ')';
       }
 
-      $("#movelist").html(pgn);
-      $("#status").text(lastMove);
+      $('#movelist').html(pgn);
+      $('#status').text(lastMove);
     },
 
     updateButtons() {
-        var moveCount=this.moveList.length;
-        var analysis=this.mode==kModeAnalysis;
-        var play=this.mode==kModePlay;
-        var canNavBack=analysis && this.moveIndex>0;
-        var canNavForward=analysis && this.moveIndex<moveCount;
+      var moveCount = this.moveList.length;
+      var analysis = this.mode == kModeAnalysis;
+      var play = this.mode == kModePlay;
+      var canNavBack = analysis && this.moveIndex > 0;
+      var canNavForward = analysis && this.moveIndex < moveCount;
 
-        $('#navBegBtn').prop('disabled', !canNavBack);
-        $('#navBckBtn').prop('disabled', !canNavBack);
-        $('#navFwdBtn').prop('disabled', !canNavForward);
-        $('#navEndBtn').prop('disabled', !canNavForward);
-        
-        $('#playBlackBtn').prop('disabled', !play);
-        $('#playWhiteBtn').prop('disabled', !play);
-        $('#takebackBtn').prop('disabled', true); // not implemented
-        $('#resignBtn').prop('disabled', !play);
+      $('#goBtn').prop('disabled', !analysis);
+      $('#stopBtn').prop('disabled', !analysis);
+
+      $('#navBegBtn').prop('disabled', !canNavBack);
+      $('#navBckBtn').prop('disabled', !canNavBack);
+      $('#navFwdBtn').prop('disabled', !canNavForward);
+      $('#navEndBtn').prop('disabled', !canNavForward);
+
+      $('#playBlackBtn').prop('disabled', !play);
+      $('#playWhiteBtn').prop('disabled', !play);
+      $('#takebackBtn').prop('disabled', true);  // not implemented
+      $('#resignBtn').prop('disabled', !play);
     },
 
     getCurrentSetup() {
@@ -216,11 +241,8 @@ var Controller = function() {
     },
 
     go() {
-      this.requestSearch({
-        'setup': this.getCurrentSetup(),
-        'go': 'go infinite'
-        }
-      );
+      this.requestSearch(
+          {'setup': this.getCurrentSetup(), 'go': 'go infinite'});
     },
 
     stop() {
@@ -241,6 +263,7 @@ var Controller = function() {
       this.worker = worker;
       this.worker.onmessage = this.receive.bind(this);
       this.worker.onerror = this.engineError.bind(this);
+      this.worker.postMessage('load ' + this.weightsUrl);
       this.state = kStateOff;
       this.uciPendingSearch = null;
     },
@@ -370,16 +393,16 @@ var Controller = function() {
 
     playWhite() {
       if (this.mode != kModePlay) return;
-      this.board.orientation("white");
-      this.humanSide='w';
+      this.board.orientation('white');
+      this.humanSide = 'w';
       this.cancelSearch();
       this.enginePlay();
     },
 
     playBlack() {
       if (this.mode != kModePlay) return;
-      this.board.orientation("black");
-      this.humanSide='b';
+      this.board.orientation('black');
+      this.humanSide = 'b';
       this.cancelSearch();
       this.enginePlay();
     },
@@ -390,23 +413,19 @@ var Controller = function() {
       this.cancelSearch();
     },
 
-    resign () {
+    resign() {
       if (this.mode != kModePlay) return;
       this.cancelSearch();
       this.moveList.splice(this.moveIndex);
-      var outcome=this.humanSide=='w' ? "0-1" : "1-0";
-      var loser=this.humanSide=='w' ? "white" : "black";
-      this.gameResult={
-        outcome: outcome,
-        reason: loser+" resigned"
-      };
+      var outcome = this.humanSide == 'w' ? '0-1' : '1-0';
+      var loser = this.humanSide == 'w' ? 'white' : 'black';
+      this.gameResult = {outcome: outcome, reason: loser + ' resigned'};
       this.updateStatus();
       this.updateButtons();
     },
 
     onDragStart(source, piece, position, orientation) {
-
-      if (this.mode==kModeAnalysis) return true;
+      if (this.mode == kModeAnalysis) return true;
 
       if (this.game.turn() != this.humanSide) return false;
       if (this.gameResult) return false;
@@ -428,11 +447,8 @@ var Controller = function() {
       if (this.game.turn() == this.humanSide) return;
       if (this.gameResult) return;
 
-      this.requestSearch({
-        'setup': this.getCurrentSetup(),
-        'go': this.playGoCmd
-        }
-      );
+      this.requestSearch(
+          {'setup': this.getCurrentSetup(), 'go': this.playGoCmd});
     },
 
     makeMove(move) {
@@ -441,32 +457,28 @@ var Controller = function() {
       this.moveList.splice(this.moveIndex);
       this.moveList.push(move);
       this.moveIndex++;
-      this.gameResult=null;
+      this.gameResult = null;
       if (this.game.game_over()) {
-        var reason=null;
-        var outcome=null;
-        var next_player=this.game.turn()=='w' ? 'white' : 'black';
+        var reason = null;
+        var outcome = null;
+        var next_player = this.game.turn() == 'w' ? 'white' : 'black';
         if (this.game.in_checkmate()) {
-          outcome=this.game.turn()=='w' ? "0-1" : "1-0";
-          reason=next_player+" is checkmate";
-        }
-        else {
-          outcome="1/2-1/2";
-          reason="draw";
+          outcome = this.game.turn() == 'w' ? '0-1' : '1-0';
+          reason = next_player + ' is checkmate';
+        } else {
+          outcome = '1/2-1/2';
+          reason = 'draw';
           if (this.game.in_stalemate()) {
-            reason=next_player+" is stalemate";
+            reason = next_player + ' is stalemate';
           }
           if (this.game.in_threefold_repetition()) {
-            reason="threefold repetition";
+            reason = 'threefold repetition';
           }
           if (this.game.insufficient_material()) {
-            reason="insufficient material";
+            reason = 'insufficient material';
           }
         }
-        this.gameResult={
-          outcome: outcome,
-          reason: reason
-        };
+        this.gameResult = {outcome: outcome, reason: reason};
       }
       this.updateButtons();
       this.updateStatus();
@@ -478,8 +490,8 @@ var Controller = function() {
     },
 
     navigateBegin() {
-      if (this.moveIndex==0) return;
-      this.moveIndex=0;
+      if (this.moveIndex == 0) return;
+      this.moveIndex = 0;
       this.game.reset();
       this.board.position(this.game.fen());
       this.updateButtons();
@@ -487,9 +499,9 @@ var Controller = function() {
     },
 
     navigateEnd() {
-      if (this.moveIndex==this.moveList.length) return;
-      while (this.moveIndex<this.moveList.length) {
-        var move=this.moveList[this.moveIndex++];
+      if (this.moveIndex == this.moveList.length) return;
+      while (this.moveIndex < this.moveList.length) {
+        var move = this.moveList[this.moveIndex++];
         this.game.move(move);
       }
       this.board.position(this.game.fen());
@@ -498,8 +510,8 @@ var Controller = function() {
     },
 
     navigateBack() {
-      if (this.moveIndex==0) return;
-      var move=this.moveList[--this.moveIndex];
+      if (this.moveIndex == 0) return;
+      var move = this.moveList[--this.moveIndex];
       this.game.undo();
       this.board.position(this.game.fen());
       this.updateButtons();
@@ -507,8 +519,8 @@ var Controller = function() {
     },
 
     navigateForward() {
-      if (this.moveIndex==this.moveList.length) return;
-      var move=this.moveList[this.moveIndex++];
+      if (this.moveIndex == this.moveList.length) return;
+      var move = this.moveList[this.moveIndex++];
       this.game.move(move);
       this.board.position(this.game.fen());
       this.updateButtons();
@@ -516,21 +528,21 @@ var Controller = function() {
     },
 
     loadPgn() {
-      var files=$('#pgnToLoad')[0].files;
-      if (!files || files.length==0) return;
-      var pgnToLoad=files[0];
+      var files = $('#pgnToLoad')[0].files;
+      if (!files || files.length == 0) return;
+      var pgnToLoad = files[0];
       if (!pgnToLoad) return;
       var fileReader = new FileReader();
       fileReader.onload = this.readPgn.bind(this);
-      fileReader.readAsText(pgnToLoad, "UTF-8");
+      fileReader.readAsText(pgnToLoad, 'UTF-8');
     },
 
     readPgn(evt) {
-      var pgn=evt.target.result;
+      var pgn = evt.target.result;
       if (!pgn) return;
 
       var pgnGame = new Chess();
-      var loaded=pgnGame.load_pgn(pgn, { sloppy: true });
+      var loaded = pgnGame.load_pgn(pgn, {sloppy: true});
       if (!loaded) return;
 
       this.board.start(true);
@@ -538,10 +550,9 @@ var Controller = function() {
 
       this.game.reset();
       this.moveList = [];
-      var history=pgnGame.history({ verbose: true });
-      for (var i=0; i<history.length; i++)
-        this.moveList.push(history[i]);
-      this.moveIndex=0;
+      var history = pgnGame.history({verbose: true});
+      for (var i = 0; i < history.length; i++) this.moveList.push(history[i]);
+      this.moveIndex = 0;
 
       this.updateButtons();
       this.updateStatus();
@@ -572,10 +583,7 @@ new Controller();
 // Prevent drag/scroll on mobile.
 
 function preventBehavior(e) {
-    e.preventDefault();
+  e.preventDefault();
 };
 
-document.addEventListener("touchmove", preventBehavior, {passive: false});
-
-
-
+document.addEventListener('touchmove', preventBehavior, {passive: false});
