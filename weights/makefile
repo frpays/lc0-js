@@ -17,6 +17,9 @@ weights_9155.txt.gz:
 ender62.txt.gz:
 	wget -O $@ https://github.com/dkappe/leela-chess-weights/files/2507425/ender62.txt.gz
 
+ender128-90l.pb.gz:
+	wget -O $@ https://github.com/dkappe/leela-chess-weights/files/2688444/ender128-90l.pb.gz
+
 weights_11248.dat.gz:
 	wget -O $@ https://lczero.org/get_network?sha=994de36c13ddf2540bf588817fcca0cb4e279e61c7d118c3bccc9c74419caecd
 
