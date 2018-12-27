@@ -103,7 +103,8 @@ Network = function() {
   const kInputPlanes = 112;
 
   function Network() {
-    this.log('Building network');
+
+    this.log('Building network for tensorflow');
     this.input_channels = kInputPlanes;
     this.num_output_policy = kNumOutputPolicies;
     // discover the rest
@@ -112,6 +113,8 @@ Network = function() {
     this.num_value_input_planes = 0;   // 32
     this.num_policy_input_planes = 0;  // 32
     this.num_value_channels = 0;       // 128
+
+    this.displayInfo();
   }
 
   Network.prototype = {
@@ -120,7 +123,6 @@ Network = function() {
       var decoder =
           name.match(/^.*\.txt\.gz$/) ? this.decodeText : this.decodeProtobuf;
       return readFile(name).then(decoder.bind(this));
-      // return readFile('weights.dat.gz').then(this.decodeProtobuf.bind(this));
     },
 
     decodeText: function(bytearray) {
@@ -222,11 +224,11 @@ Network = function() {
       var weights = net.weights;
       this.data = {};
       this.data.input = this.decodeBinConv(weights.input, 3);
-
+      this.filters = this.data.input.biases.length;
       var residuals = weights.residual;
       this.blocks = residuals.length;
       this.log('Network blocks: ' + this.blocks);
-
+      this.log('Network filters: ' + this.filters);
       this.data.tower = new Array(this.blocks);
       for (block = 0; block < this.blocks; block++) {
         var residual = residuals[block];
@@ -466,6 +468,23 @@ Network = function() {
         }
       };
       tf.tidy(work);
+    },
+
+    displayInfo: function() {
+	    // These are undocumented features, so proceed with caution.
+	    var tf_env=tf.ENV;
+	    if (!tf_env) return;
+	    var backend=tf_env.backendName;
+	    this.log('Tensorflow backend: '+backend);
+
+////  WebGL details, not very useful.
+//
+//      if ('webgl' != backend) return;
+//	    var tf_features=tf_env.features;
+//	    if (typeof tf_features != 'object') return;
+//      for (var key in tf_features) {
+//        this.log('Tensorflow '+key+': '+tf_features[key]);
+//	    }
     },
 
     log: function(text) {
