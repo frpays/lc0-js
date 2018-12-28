@@ -103,10 +103,12 @@ var Controller = function() {
       this.moveIndex = 0;
       this.gameResult = null;
 
+      // reset to white
+      if (this.mode == kModePlay) this.humanSide = 'w';
+
       this.updateButtons();
       this.updateStatus();
 
-      if (this.mode == kModePlay) this.humanSide = 'w';
     },
 
 
