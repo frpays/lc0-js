@@ -223,8 +223,10 @@ var Controller = function() {
       $('#stopBtn').prop('disabled', !analysis);
 
       const play = ready && this.mode == kModePlay;
-      $('#playBlackBtn').prop('disabled', !play);
-      $('#playWhiteBtn').prop('disabled', !play);
+      const playBlack = play && 'w' == this.humanSide;
+      const playWhite = play && 'b' == this.humanSide;
+      $('#playBlackBtn').prop('disabled', !playBlack);
+      $('#playWhiteBtn').prop('disabled', !playWhite);
       $('#takebackBtn').prop('disabled', true);  // not implemented yet
       $('#resignBtn').prop('disabled', !play);
     },
@@ -398,8 +400,10 @@ var Controller = function() {
         case kStateReplacing: {
           var match = message.match(kRegexBestMove);
           if (match) {
+            this.send(this.uciPendingSearch.setup);
+            this.send(this.uciPendingSearch.go);
             this.uciPendingSearch = null;
-            this.state = kStateReady;
+            this.state = kStateRunning;
           }
           break;
         }
@@ -409,6 +413,7 @@ var Controller = function() {
 
     playWhite() {
       if (this.mode != kModePlay) return;
+      if (this.humanSide == 'w') return;
       this.board.orientation('white');
       this.humanSide = 'w';
       this.cancelSearch();
@@ -417,6 +422,7 @@ var Controller = function() {
 
     playBlack() {
       if (this.mode != kModePlay) return;
+      if (this.humanSide == 'b') return;
       this.board.orientation('black');
       this.humanSide = 'b';
       this.cancelSearch();
