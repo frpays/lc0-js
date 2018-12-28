@@ -74,6 +74,8 @@ var Controller = function() {
     $('#applyParams').on('click', this.applyParams.bind(this));
     $('#logs').change(this.displayLogChanged.bind(this));
 
+    $('#popup').find('*').on('click', function() { $('#popup').removeClass('show-modal'); });
+
     this.populateNetworks();
     $('#applyNetwork').on('click', this.applyNetwork.bind(this));
 
@@ -225,10 +227,11 @@ var Controller = function() {
       const play = ready && this.mode == kModePlay;
       const playBlack = play && 'w' == this.humanSide;
       const playWhite = play && 'b' == this.humanSide;
+      const resign = play && !this.gameResult;
       $('#playBlackBtn').prop('disabled', !playBlack);
       $('#playWhiteBtn').prop('disabled', !playWhite);
       $('#takebackBtn').prop('disabled', true);  // not implemented yet
-      $('#resignBtn').prop('disabled', !play);
+      $('#resignBtn').prop('disabled', !resign);
     },
 
     getCurrentSetup() {
@@ -301,6 +304,13 @@ var Controller = function() {
         default:
           this.board.position(this.game.fen());
           break;
+      }
+
+      if (this.gameResult) {
+        this.showPopup('Game ended msg2!');
+      }
+      else {
+        this.enginePlay();
       }
     },
 
@@ -445,6 +455,13 @@ var Controller = function() {
       this.gameResult = {outcome: outcome, reason: loser + ' resigned'};
       this.updateStatus();
       this.updateButtons();
+      this.showPopup('Thank you!');
+    },
+
+
+    showPopup(message) {
+      $('#popup div h1').text(message);
+      $('#popup').addClass('show-modal');
     },
 
     onDragStart(source, piece, position, orientation) {
@@ -462,7 +479,14 @@ var Controller = function() {
       move = this.makeMove(move);
       if (move === null) return 'snapback';
 
-      if (this.mode == kModePlay) this.enginePlay();
+      if (this.mode == kModePlay) {
+        if (this.gameResult) {
+          this.showPopup('Game ended msg1!');
+        }
+        else {
+          this.enginePlay();
+        }
+      }
     },
 
     enginePlay() {
@@ -491,7 +515,7 @@ var Controller = function() {
           reason = next_player + ' is checkmate';
         } else {
           outcome = '1/2-1/2';
-          reason = 'draw';
+          reason = '50-move rule';
           if (this.game.in_stalemate()) {
             reason = next_player + ' is stalemate';
           }
