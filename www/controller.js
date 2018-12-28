@@ -87,8 +87,8 @@ var Controller = function() {
 
     this.createEngine();
 
-    this.mode = kModeAnalysis;
-    this.humanSide = null;
+    this.mode = kModePlay;
+    this.humanSide = 'w';
 
     this.updateButtons();
     this.updateStatus();
@@ -205,23 +205,27 @@ var Controller = function() {
     },
 
     updateButtons() {
-      var moveCount = this.moveList.length;
-      var analysis = this.mode == kModeAnalysis;
-      var play = this.mode == kModePlay;
-      var canNavBack = analysis && this.moveIndex > 0;
-      var canNavForward = analysis && this.moveIndex < moveCount;
 
-      $('#goBtn').prop('disabled', !analysis);
-      $('#stopBtn').prop('disabled', !analysis);
+      const canNav = this.mode == kModeAnalysis;
+      const moveCount = this.moveList.length;
+      const canNavBack = canNav && this.moveIndex > 0;
+      const canNavForward = canNav && this.moveIndex < moveCount;
 
+      $('#loadPgnBtn').prop('disabled', !canNav);
       $('#navBegBtn').prop('disabled', !canNavBack);
       $('#navBckBtn').prop('disabled', !canNavBack);
       $('#navFwdBtn').prop('disabled', !canNavForward);
       $('#navEndBtn').prop('disabled', !canNavForward);
 
+      const ready = this.worker && this.state != kStateOff;
+      const analysis = ready && this.mode == kModeAnalysis;
+      $('#goBtn').prop('disabled', !analysis);
+      $('#stopBtn').prop('disabled', !analysis);
+
+      const play = ready && this.mode == kModePlay;
       $('#playBlackBtn').prop('disabled', !play);
       $('#playWhiteBtn').prop('disabled', !play);
-      $('#takebackBtn').prop('disabled', true);  // not implemented
+      $('#takebackBtn').prop('disabled', true);  // not implemented yet
       $('#resignBtn').prop('disabled', !play);
     },
 
@@ -243,10 +247,12 @@ var Controller = function() {
     go() {
       this.requestSearch(
           {'setup': this.getCurrentSetup(), 'go': 'go infinite'});
+      this.updateButtons();
     },
 
     stop() {
       this.cancelSearch();
+      this.updateButtons();
     },
 
     createEngine() {
@@ -257,6 +263,8 @@ var Controller = function() {
       CreateLC0Worker()
           .then(this.initEngine.bind(this))
           .catch(this.showError.bind(this));
+
+      this.updateButtons();
     },
 
     initEngine(worker) {
@@ -266,6 +274,8 @@ var Controller = function() {
       this.worker.postMessage('load ' + this.weightsUrl);
       this.state = kStateOff;
       this.uciPendingSearch = null;
+
+      this.updateButtons();
     },
 
     send(message) {
@@ -346,49 +356,55 @@ var Controller = function() {
     },
 
     receive(e) {
-      var message = e.data;
+      const message = e.data;
       if (Array.isArray(message)) {
         this.output.value += message[1] + ': ' + message[0] + '\n';
       } else {
         // engine
+        this.interpret(message);
         this.output.value += message + '\n';
-        switch (this.state) {
-          case kStateOff:
-            if (message == 'uciok') {
-              this.state = kStateReady;
-            }
-            break;
-
-          case kStateReady:
-            break;
-
-          case kStateRunning: {
-            var match = message.match(kRegexBestMove);
-            if (match) {
-              var move = {from: match[1], to: match[2], promotion: match[3]};
-              this.state = kStateReady;
-              this.searchResponse(move);
-            }
-            break;
-          }
-
-          case kStateCancelling: {
-            var match = message.match(kRegexBestMove);
-            if (match) this.state = kStateReady;
-            break;
-          }
-
-          case kStateReplacing: {
-            var match = message.match(kRegexBestMove);
-            if (match) {
-              this.state = uciPendingSearch = null;
-              this.state = kStateReady;
-            }
-            break;
-          }
-        }
       }
       this.output.scrollTop = output.scrollHeight;
+    },
+
+    interpret(message) {
+      const oldState = this.state;
+      switch (this.state) {
+        case kStateOff:
+          if (message == 'uciok') {
+            this.state = kStateReady;
+          }
+          break;
+
+        case kStateReady:
+          break;
+
+        case kStateRunning: {
+          var match = message.match(kRegexBestMove);
+          if (match) {
+            var move = {from: match[1], to: match[2], promotion: match[3]};
+            this.state = kStateReady;
+            this.searchResponse(move);
+          }
+          break;
+        }
+
+        case kStateCancelling: {
+          var match = message.match(kRegexBestMove);
+          if (match) this.state = kStateReady;
+          break;
+        }
+
+        case kStateReplacing: {
+          var match = message.match(kRegexBestMove);
+          if (match) {
+            this.uciPendingSearch = null;
+            this.state = kStateReady;
+          }
+          break;
+        }
+      }
+      if (this.state != oldState) this.updateButtons();
     },
 
     playWhite() {
@@ -415,6 +431,7 @@ var Controller = function() {
 
     resign() {
       if (this.mode != kModePlay) return;
+      if (this.gameResult) return;
       this.cancelSearch();
       this.moveList.splice(this.moveIndex);
       var outcome = this.humanSide == 'w' ? '0-1' : '1-0';
@@ -426,20 +443,20 @@ var Controller = function() {
 
     onDragStart(source, piece, position, orientation) {
       if (this.mode == kModeAnalysis) return true;
-
       if (this.game.turn() != this.humanSide) return false;
       if (this.gameResult) return false;
       return true;
     },
 
     onDrop(source, target) {
+      if (this.mode == kModePlay && this.state != kStateReady)
+        return 'snapback';
+
       var move = {from: source, to: target, promotion: 'q'};  // TODO
       move = this.makeMove(move);
       if (move === null) return 'snapback';
 
-      if (this.mode == kModePlay) {
-        this.enginePlay();
-      }
+      if (this.mode == kModePlay) this.enginePlay();
     },
 
     enginePlay() {
@@ -449,6 +466,7 @@ var Controller = function() {
 
       this.requestSearch(
           {'setup': this.getCurrentSetup(), 'go': this.playGoCmd});
+      this.updateButtons();
     },
 
     makeMove(move) {
