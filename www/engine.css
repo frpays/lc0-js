@@ -201,11 +201,11 @@ fieldset {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.2);
   opacity: 0;
   visibility: hidden;
   transform: scale(1.1);
-  transition: visibility 0s linear 0.25s, opacity 0.25s 0s, transform 0.25s;
+  transition: visibility 0s linear 0.15s, opacity 0.15s 0s, transform 0.15s;
 }
 
 .modal-content {
@@ -214,22 +214,22 @@ fieldset {
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
-  padding: 1rem 1.5rem;
-  width: 24rem;
-  border-radius: 0.5rem;
+  padding: 8px;
+  width: 400px;
+  border-radius: 8px;
 }
 
-.modal-content h1 {
+.modal-content h1,h2,h3 {
   text-align: center;
 }
 
 .close-button {
   float: right;
-  width: 1.5rem;
-  line-height: 1.5rem;
+  width: 24px;
+  line-height: 24px;
   text-align: center;
   cursor: pointer;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   background-color: lightgray;
 }
 
@@ -238,10 +238,9 @@ fieldset {
 }
 
 .show-modal {
-  opacity: 0.95;
+  opacity: 1;
   visibility: visible;
   transform: scale(1.0);
-  transition: visibility 0s linear 0s, opacity 0.25s 0s, transform 0.25s;
+  transition: visibility 0s linear 0s, opacity 0.15s 0s, transform 0.15s;
 }
-
 
