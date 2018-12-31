@@ -36,6 +36,26 @@ var Controller = function() {
   const kModeAnalysis = 1;
 
   const kRegexBestMove = /^bestmove ([a-h][1-8])([a-h][1-8])([nbrq])?/;
+  const kRegexResult = / ([^\r\n ]+)[\r\n ]*$/
+
+  const kOutcomeWhiteWon = {loser: 'b', mnemo: '1-0', text: 'Win wins'};
+  const kOutcomeBlackWon = {loser: 'w', mnemo: '0-1', text: 'Black wins'};
+  const kOutcomeDraw = {mnemo: '1/2-1/2', text: 'Draw'};
+
+  const kOutcomes = [
+    kOutcomeWhiteWon,
+    kOutcomeBlackWon,
+    kOutcomeDraw,
+  ];
+
+  const kOutcomeForLoser = {};
+  const kOutcomeForMnemo = {};
+
+  kOutcomes.forEach(function(outcome) {
+    if (outcome.loser) kOutcomeForLoser[outcome.loser] = outcome;
+    kOutcomeForMnemo[outcome.mnemo] = outcome;
+  });
+
 
   function Controller() {
     var cfg = {
@@ -74,6 +94,10 @@ var Controller = function() {
     $('#applyParams').on('click', this.applyParams.bind(this));
     $('#logs').change(this.displayLogChanged.bind(this));
 
+    $('#popup').find('*').on('click', function() {
+      $('#popup').removeClass('show-modal');
+    });
+
     this.populateNetworks();
     $('#applyNetwork').on('click', this.applyNetwork.bind(this));
 
@@ -108,7 +132,6 @@ var Controller = function() {
 
       this.updateButtons();
       this.updateStatus();
-
     },
 
 
@@ -198,8 +221,7 @@ var Controller = function() {
         if (current) pgn += '</b>';
       }
       if (this.gameResult) {
-        pgn +=
-            ' ' + this.gameResult.outcome + ' (' + this.gameResult.reason + ')';
+        pgn += ' ' + this.gameResult.outcome.mnemo;
       }
 
       $('#movelist').html(pgn);
@@ -207,7 +229,6 @@ var Controller = function() {
     },
 
     updateButtons() {
-
       const canNav = this.mode == kModeAnalysis;
       const moveCount = this.moveList.length;
       const canNavBack = canNav && this.moveIndex > 0;
@@ -227,10 +248,11 @@ var Controller = function() {
       const play = ready && this.mode == kModePlay;
       const playBlack = play && 'w' == this.humanSide;
       const playWhite = play && 'b' == this.humanSide;
+      const resign = play && !this.gameResult;
       $('#playBlackBtn').prop('disabled', !playBlack);
       $('#playWhiteBtn').prop('disabled', !playWhite);
       $('#takebackBtn').prop('disabled', true);  // not implemented yet
-      $('#resignBtn').prop('disabled', !play);
+      $('#resignBtn').prop('disabled', !resign);
     },
 
     getCurrentSetup() {
@@ -303,6 +325,12 @@ var Controller = function() {
         default:
           this.board.position(this.game.fen());
           break;
+      }
+
+      if (this.gameResult) {
+        this.displayGameResult();
+      } else {
+        this.enginePlay();
       }
     },
 
@@ -442,17 +470,25 @@ var Controller = function() {
       if (this.gameResult) return;
       this.cancelSearch();
       this.moveList.splice(this.moveIndex);
-      var outcome = this.humanSide == 'w' ? '0-1' : '1-0';
-      var loser = this.humanSide == 'w' ? 'white' : 'black';
+      const outcome = kOutcomeForLoser[this.humanSide];
+      const loser = this.humanSide == 'w' ? 'White' : 'Black';
       this.gameResult = {outcome: outcome, reason: loser + ' resigned'};
+      this.displayGameResult();
       this.updateStatus();
       this.updateButtons();
+    },
+
+
+    displayGameResult() {
+      if (!this.gameResult) return;
+      $('#popup div h2').text(this.gameResult.reason + '!');
+      $('#popup div h3').text(this.gameResult.outcome.text + '.');
+      $('#popup').addClass('show-modal');
     },
 
     onDragStart(source, piece, position, orientation) {
       if (this.mode == kModeAnalysis) return true;
       if (this.game.turn() != this.humanSide) return false;
-      if (this.gameResult) return false;
       return true;
     },
 
@@ -464,7 +500,13 @@ var Controller = function() {
       move = this.makeMove(move);
       if (move === null) return 'snapback';
 
-      if (this.mode == kModePlay) this.enginePlay();
+      if (this.mode == kModePlay) {
+        if (this.gameResult) {
+          this.displayGameResult();
+        } else {
+          this.enginePlay();
+        }
+      }
     },
 
     enginePlay() {
@@ -487,21 +529,20 @@ var Controller = function() {
       if (this.game.game_over()) {
         var reason = null;
         var outcome = null;
-        var next_player = this.game.turn() == 'w' ? 'white' : 'black';
         if (this.game.in_checkmate()) {
-          outcome = this.game.turn() == 'w' ? '0-1' : '1-0';
-          reason = next_player + ' is checkmate';
+          outcome = kOutcomeForLoser[this.game.turn()];
+          reason = 'Checkmate';
         } else {
-          outcome = '1/2-1/2';
-          reason = 'draw';
+          outcome = kOutcomeDraw;
+          reason = '50-move rule';
           if (this.game.in_stalemate()) {
-            reason = next_player + ' is stalemate';
+            reason = 'Stalemate';
           }
           if (this.game.in_threefold_repetition()) {
-            reason = 'threefold repetition';
+            reason = 'Threefold repetition';
           }
           if (this.game.insufficient_material()) {
-            reason = 'insufficient material';
+            reason = 'Insufficient material';
           }
         }
         this.gameResult = {outcome: outcome, reason: reason};
@@ -579,6 +620,13 @@ var Controller = function() {
       var history = pgnGame.history({verbose: true});
       for (var i = 0; i < history.length; i++) this.moveList.push(history[i]);
       this.moveIndex = 0;
+
+      this.gameResult = null;
+      var match = pgn.match(kRegexResult);
+      if (match) {
+        const outcome = kOutcomeForMnemo[match[1]];
+        if (outcome) this.gameResult = {outcome: outcome};
+      }
 
       this.updateButtons();
       this.updateStatus();
