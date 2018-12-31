@@ -17,55 +17,53 @@
 */
 
 body {
-	background-color: #f0f0f0;
+  background-color: #f0f0f0;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
- 	max-width: 800px;
+  max-width: 800px;
 }
 
 #title {
-	padding: 5px 5px;
-	font-size: 150%;
-	font-weight: bold;
+  padding: 5px 5px;
+  font-size: 150%;
+  font-weight: bold;
   font-family: 'Sedgwick Ave', cursive;
 }
 
 #gameinfo {
-	float: left;
-	font-size: 70%;
+  float: left;
+  font-size: 70%;
 }
 
 #board {
-	width: 400px;
-	float: left;
+  width: 400px;
+  float: left;
 }
 
 #movelist {
-	padding: 10px;
-	font-size: 80%;
-/*	background-color: #ff70ff;*/
-	min-width: 200px;
-	overflow: hidden;
+  padding: 10px;
+  font-size: 80%;
+  min-width: 200px;
+  overflow: hidden;
 }
 
 #analysis {
-	padding: 10px;
-	height: 100%;
-	overflow: hidden;
-	font-size: 80%;
+  padding: 10px;
+  height: 100%;
+  overflow: hidden;
+  font-size: 80%;
 }
 
 #parameters {
-	padding: 10px;
-	height: 100%;
-	overflow: hidden;
-	font-size: 80%;
+  padding: 10px;
+  height: 100%;
+  overflow: hidden;
+  font-size: 80%;
 }
 
 #variations {
-	padding: 10px;
-/*	background-color: #ff70ff;*/
-	min-width: 200px;
-	overflow: hidden;
+  padding: 10px;
+  min-width: 200px;
+  overflow: hidden;
 }
 
 #control {
@@ -76,15 +74,15 @@ body {
 #error {
   font-weight: bold;
   font-size: 100%;
-	display: none;
-	background-color: #D00000;
-	color: white;
+  display: none;
+  background-color: #D00000;
+  color: white;
   float: left;
-	width: 100%;
-	padding: 12px 20px;
-	margin: 8px 0;
-	border-radius: 5px;
-	box-sizing: border-box;
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  border-radius: 5px;
+  box-sizing: border-box;
 }
 
 #error-content {
@@ -96,10 +94,10 @@ body {
 }
 
 .buttons {
-	float: left;
+  float: left;
   font-size: 80% ;
   font-weight: bold;
-	margin: 4px;
+  margin: 4px;
   padding: 4px;
 }
 
@@ -107,6 +105,7 @@ body {
   padding: 4px 16px;
   border-radius: 6px;
   border: 1px solid #aaa;
+  background-color: white;
 }
 
 .buttons button:hover:enabled {
@@ -120,12 +119,10 @@ body {
 }
 
 #status {
-	margin: 4px;
+  margin: 4px;
   padding: 4px;
   font-size: 80%;
 }
-
-
 
 #output {
   float: left;
