@@ -36,7 +36,8 @@ var Controller = function() {
   const kModeAnalysis = 1;
 
   const kRegexBestMove = /^bestmove ([a-h][1-8])([a-h][1-8])([nbrq])?/;
-  const kRegexResult = / ([^\r\n ]+)[\r\n ]*$/
+  const kRegexResult = / ([^\r\n ]+)[\r\n ]*$/;
+  const kRegexBasename = /^([^.]*)\..*$/;
 
   const kOutcomeWhiteWon = {loser: 'b', mnemo: '1-0', text: 'Win wins'};
   const kOutcomeBlackWon = {loser: 'w', mnemo: '0-1', text: 'Black wins'};
@@ -147,7 +148,7 @@ var Controller = function() {
       for (var i = 0; i < urls.length; i++) {
         var url = urls[i];
         if (!url || url.length == 0) continue;
-        var match = url.match(/^([^.]*)\..*$/);
+        var match = url.match(kRegexBasename);
         var label = match ? match[1] : url;
         $('#network')
             .append($('<option></option>').attr('value', url).text(label));
@@ -195,17 +196,22 @@ var Controller = function() {
     },
 
     updateStatus() {
-      var lastMove = '';
+
+      var lastMove;
       if (this.moveIndex > 0) {
         var san = this.moveList[this.moveIndex - 1].san;
         var fullMoves = (this.moveIndex + 1) >> 1;
         var turn = this.game.turn();
         if (turn == 'w') {
-          lastMove = 'After ' + fullMoves + '. ... ' + san;
+          lastMove = 'After ' + fullMoves + '. ... ' + san + '.';
         } else {
-          lastMove = 'After ' + fullMoves + '. ' + san;
+          lastMove = 'After ' + fullMoves + '. ' + san + '.';
         }
       }
+      else {
+        lastMove = 'Starting position.';
+      }
+      $('#status').text(lastMove);
 
       var pgn = '';
       for (var i = 0; i < this.moveList.length; i++) {
@@ -223,10 +229,9 @@ var Controller = function() {
       if (this.gameResult) {
         pgn += ' ' + this.gameResult.outcome.mnemo;
       }
-
       $('#movelist').html(pgn);
-      $('#status').text(lastMove);
     },
+
 
     updateButtons() {
       const canNav = this.mode == kModeAnalysis;
@@ -241,17 +246,20 @@ var Controller = function() {
       $('#navEndBtn').prop('disabled', !canNavForward);
 
       const ready = this.worker && this.state != kStateOff;
-      const analysis = ready && this.mode == kModeAnalysis;
-      $('#goBtn').prop('disabled', !analysis);
-      $('#stopBtn').prop('disabled', !analysis);
+      const analysisMode = ready && this.mode == kModeAnalysis;
 
-      const play = ready && this.mode == kModePlay;
-      const playBlack = play && 'w' == this.humanSide;
-      const playWhite = play && 'b' == this.humanSide;
-      const resign = play && !this.gameResult;
+      $('#goBtn').prop('disabled', !analysisMode);
+      $('#stopBtn').prop('disabled', !analysisMode);
+
+      const playMode = ready && this.mode == kModePlay;
+      const playBlack = playMode && 'w' == this.humanSide;
+      const playWhite = playMode && 'b' == this.humanSide;
+      const resign = playMode && !this.gameResult;
+      const takeback = playMode && this.moveCount(this.humanSide) > 0;
+
       $('#playBlackBtn').prop('disabled', !playBlack);
       $('#playWhiteBtn').prop('disabled', !playWhite);
-      $('#takebackBtn').prop('disabled', true);  // not implemented yet
+      $('#takebackBtn').prop('disabled', !takeback);
       $('#resignBtn').prop('disabled', !resign);
     },
 
@@ -461,8 +469,21 @@ var Controller = function() {
 
     takeback() {
       if (this.mode != kModePlay) return;
-      // TODO
       this.cancelSearch();
+      while (this.moveIndex > 0) {
+        var move = this.moveList[--this.moveIndex];
+        this.game.undo();
+        if (move.color == this.humanSide) break;
+      }
+      this.board.position(this.game.fen());
+      this.updateButtons();
+      this.updateStatus();
+    },
+
+    moveCount(color) {
+      var count = this.moveIndex;
+      if ('w' == color) count++;
+      return count >> 1;
     },
 
     resign() {
@@ -658,6 +679,6 @@ new Controller();
 
 function preventBehavior(e) {
   e.preventDefault();
-};
+}
 
 document.addEventListener('touchmove', preventBehavior, {passive: false});
