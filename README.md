@@ -21,11 +21,6 @@ The result of the compilation is in the folder www. You can run a local webserve
 Browse to http://localhost:8000/ in order to run your local example.
 
 
-## Issues
-
-- The node garbage collection is temporarily commented-out. It was thread-based (see Porting) and I could not figure out how to make it sequential (yet). Until it is fixed, the engine leaks nodes during the search process, which means that the browser will eventually run out of memory.
-
-
 ## Porting
 
 ### Weights
