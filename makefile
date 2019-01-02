@@ -8,6 +8,7 @@ dist_clean:: clean
 
 
 EMMC_OPTIM_FLAGS=\
+-D NDEBUG \
 -O3 \
 -s DISABLE_EXCEPTION_CATCHING=0
 
