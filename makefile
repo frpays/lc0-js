@@ -5,6 +5,7 @@ all::
 clean::
 
 dist_clean:: clean
+	cd weights && make dist_clean
 
 
 EMMC_OPTIM_FLAGS=\
@@ -132,6 +133,43 @@ www/networks.txt: $(WEIGHTS_LIST)
 dist_clean::
 	rm -f www/networks.txt $(COPIED_WEIGHTS_FILES)
 
+
+
+##
+## chessboardjs
+##
+
+CHESSBOARD_FILES=\
+chessboard-0.3.0.css \
+chessboard-0.3.0.js \
+chessboard-0.3.0.min.css \
+chessboard-0.3.0.min.js \
+img/chesspieces
+
+CHESSBOARD_WWW_FILES=$(CHESSBOARD_FILES:%=www/%)
+
+CHESSBOARD_RELEASE=libs/chessboardjs/releases/0.3.0
+
+chessboard: $(CHESSBOARD_WWW_FILES)
+
+$(CHESSBOARD_WWW_FILES):
+	cp $(CHESSBOARD_RELEASE)/js/chessboard-0.3.0.js www/chessboard-0.3.0.js
+	cp $(CHESSBOARD_RELEASE)/js/chessboard-0.3.0.min.js www/chessboard-0.3.0.min.js
+	cp $(CHESSBOARD_RELEASE)/css/chessboard-0.3.0.css www/chessboard-0.3.0.css
+	cp $(CHESSBOARD_RELEASE)/css/chessboard-0.3.0.min.css www/chessboard-0.3.0.min.css
+	rm -rf www/img/chesspieces
+	mkdir -p www/img
+	cp -r $(CHESSBOARD_RELEASE)/img/chesspieces www/img/chesspieces
+
+clean_chessboard:
+	rm -rf www/img/chesspieces
+	rmdir -p www/img 2>/dev/null || true
+	rm -f $(CHESSBOARD_WWW_FILES)
+
+
+all:: chessboard
+
+dist_clean:: clean_chessboard
 
 
 ##
