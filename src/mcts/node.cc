@@ -193,7 +193,6 @@ EdgeList::EdgeList(MoveList moves)
 /////////////////////////////////////////////////////////////////////////
 
 Node* Node::CreateSingleChildNode(Move move) {
-  assert(!edges_);
   assert(!child_);
   edges_ = EdgeList({move});
   child_ = std::make_unique<Node>(this, 0);
