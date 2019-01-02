@@ -45,7 +45,6 @@ namespace lczero {
 #ifdef EMSCRIPTEN
 
 #define GC_COLLECT(NODE)  { NODE.reset(nullptr); }
-//#define GC_COLLECT(NODE)  { }
 
 #else
 
