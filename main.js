@@ -458,14 +458,12 @@ Network = function() {
       function work() {
         var x = tf.tensor4d(input, [batch_size, kInputPlanes, 8, 8]);
         var predict = self.model.predict(x);
-        var p_buffer = predict[0].buffer();
-        var v_buffer = predict[1].buffer();
-        var p_idx = 0;
-        for (var i = 0; i < batch_size; i++) {
-          value[i] = v_buffer.get(i, 0);
-          for (var j = 0; j < kNumOutputPolicies; j++)
-            policy[p_idx++] = p_buffer.get(i, j);
-        }
+        var p_data = predict[0].dataSync();
+        for (var i=0; i<policy.length; i++)
+          policy[i]=p_data[i];
+        var v_data = predict[1].dataSync();
+        for (var i=0; i<value.length; i++)
+          value[i]=v_data[i];
       };
       tf.tidy(work);
     },
