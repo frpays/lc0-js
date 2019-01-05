@@ -103,8 +103,28 @@ Network = function() {
   const kInputPlanes = 112;
 
   function Network() {
+    this.backend = tf.getBackend();
+    this.log('Tensorflow backend: ' + this.backend);
 
-    this.log('Building network for tensorflow');
+    // Select a default dataFormat.
+    //
+    // 'channelsFirst' also known as 'NCHW' should be faster for webgl.
+    // 'channelsLast' also known as 'NHWC' should be faster for cpu.
+
+    // As of tensorflowjs 14.1, batchnorm layer does not work with the
+    // 'channelsFirst' dataFormat.
+    // It looks like 'channelsFirst' is also slightly faster for both backends
+    // but our weights and the input tensor are designed for 'channelsFirst'.
+
+    // Our policy for now is:
+    // 'webgl' -> 'channelsFirst'
+    // 'cpu'   -> 'channelsFirst'
+
+    var format = 'channelsFirst';
+    if (this.backend == 'cpu') format = 'channelsLast';
+    this.setDataFormat(format);
+    this.log('Default data format: ' + format);
+
     this.input_channels = kInputPlanes;
     this.num_output_policy = kNumOutputPolicies;
     // discover the rest
@@ -113,11 +133,16 @@ Network = function() {
     this.num_value_input_planes = 0;   // 32
     this.num_policy_input_planes = 0;  // 32
     this.num_value_channels = 0;       // 128
-
-    this.displayInfo();
   }
 
   Network.prototype = {
+
+
+    setDataFormat: function(format) {
+      this.dataFormat = format;
+      this.isChannelsFirst = format == 'channelsFirst';
+      this.isChannelsLast = format == 'channelsLast';
+    },
 
     load: function(name) {
       var decoder =
@@ -354,19 +379,21 @@ Network = function() {
 
     applyConvolution: function(flow, conv, skip) {
       var conv_layer = tf.layers.conv2d({
-        dataFormat: 'channelsFirst',
+        dataFormat: this.dataFormat,
         kernelSize: [conv.filtersize, conv.filtersize],
         weights: this.loadConvWeights(conv),
         padding: 'same',
         filters: conv.outputs,
         useBias: true,
       });
+
       flow = conv_layer.apply(flow);
 
       var tm = tf.tensor1d(new Float32Array(conv.bn_means));
       var ts = tf.tensor1d(new Float32Array(conv.bn_stddivs));
+
       var bn_layer = tf.layers.batchNormalization({
-        axis: 1,
+        axis: this.isChannelsFirst ? 1 : -1,
         epsilon: 1e-5,
         scale: false,
         center: false,
@@ -388,10 +415,12 @@ Network = function() {
 
     build: function() {
       this.log('Building network...');
-      this.input = tf.input({
-        //				shape: [112, 8, 8],
-        batchShape: [null, kInputPlanes, 8, 8],
-      });
+      this.log('Network format: ' + this.dataFormat);
+
+      var batchShape = this.isChannelsFirst ? [null, kInputPlanes, 8, 8] :
+                                              [null, 8, 8, kInputPlanes];
+
+      this.input = tf.input({batchShape: batchShape});
 
       var flow = this.input;
       flow = this.applyConvolution(flow, this.data.input);
@@ -407,6 +436,11 @@ Network = function() {
       var policy_head = this.data.policy_head;
       var p_flow = this.applyConvolution(flow, policy_head.conv1);
 
+      if (this.isChannelsLast) {
+        layer = tf.layers.permute({dims: [3, 1, 2]});
+        p_flow = layer.apply(p_flow);
+      }
+
       layer = tf.layers.flatten();
       p_flow = layer.apply(p_flow);
 
@@ -416,6 +450,11 @@ Network = function() {
       // Value head
       var value_head = this.data.value_head;
       var v_flow = this.applyConvolution(flow, value_head.conv1);
+
+      if (this.isChannelsLast) {
+        layer = tf.layers.permute({dims: [3, 1, 2]});
+        v_flow = layer.apply(v_flow);
+      }
 
       layer = tf.layers.flatten();
       v_flow = layer.apply(v_flow);
@@ -435,7 +474,7 @@ Network = function() {
     },
 
     decodeTest: function(bytearray) {
-      var text = pako.inflate(bytearray, {to: 'string'});
+      var text = window.pako.inflate(bytearray, {to: 'string'});
       var lines = text.split(/\r\n|\n/);
       var line1 = lines[0].split(' ');
       var line2 = lines[1].split(' ');
@@ -443,9 +482,15 @@ Network = function() {
 
       this.test_x =
           tf.tensor4d(new Float32Array(line1), [1, kInputPlanes, 8, 8]);
+
+      if (this.isChannelsLast) {
+        this.test_x = tf.transpose(this.test_x, [0, 2, 3, 1]);
+      }
+
       this.test_y = line2[0];
       this.test_z = tf.tensor1d(new Float32Array(line3));
       this.log('Loaded test data!');
+
 
       var predict = this.model.predict(this.test_x);
       //			this.log('input: '+this.test_x);
@@ -457,32 +502,17 @@ Network = function() {
       var self = this;
       function work() {
         var x = tf.tensor4d(input, [batch_size, kInputPlanes, 8, 8]);
+        if (self.isChannelsLast) {
+          x = tf.transpose(x, [0, 2, 3, 1]);
+        }
+
         var predict = self.model.predict(x);
         var p_data = predict[0].dataSync();
-        for (var i=0; i<policy.length; i++)
-          policy[i]=p_data[i];
+        for (var i = 0; i < policy.length; i++) policy[i] = p_data[i];
         var v_data = predict[1].dataSync();
-        for (var i=0; i<value.length; i++)
-          value[i]=v_data[i];
+        for (var i = 0; i < value.length; i++) value[i] = v_data[i];
       };
       tf.tidy(work);
-    },
-
-    displayInfo: function() {
-	    // These are undocumented features, so proceed with caution.
-	    var tf_env=tf.ENV;
-	    if (!tf_env) return;
-	    var backend=tf_env.backendName;
-	    this.log('Tensorflow backend: '+backend);
-
-////  WebGL details, not very useful.
-//
-//      if ('webgl' != backend) return;
-//	    var tf_features=tf_env.features;
-//	    if (typeof tf_features != 'object') return;
-//      for (var key in tf_features) {
-//        this.log('Tensorflow '+key+': '+tf_features[key]);
-//	    }
     },
 
     log: function(text) {
