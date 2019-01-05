@@ -118,7 +118,7 @@ Network = function() {
 
     // Our policy for now is:
     // 'webgl' -> 'channelsFirst'
-    // 'cpu'   -> 'channelsFirst'
+    // 'cpu'   -> 'channelsLast'
 
     var format = 'channelsFirst';
     if (this.backend == 'cpu') format = 'channelsLast';
