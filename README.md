@@ -42,9 +42,7 @@ None of the original backends can be compiled to javascript, except Blas, provid
 
 A new javascript backend has been written from scratch over tensorflowjs. The backend fetches the weight file with a http request, decodes it (either txt.gz or protobuf gunzipped) and uses tensorflowjs to handle the computations.
 
-Currently the default network is the 9155 network. But it can easily be switched to a bigger 20b protobuf network or, alternatively, a network provided by the user (through a file load dialog).
-
-Note that if tensorflowjs falls back to CPU due to lack of WebGL support of lack of GPU, the computations are not only slow, but wrong because the tensors are no longer in the expected format.
+Currently the default network is a small id9155 (6b/64) in text.gz format. But it can be switched to a bigger 20b protobuf network (id11248 or id31295).
 
 
 ### Threads
